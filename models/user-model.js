@@ -1,39 +1,67 @@
-const mongoose=require("mongoose");
+const mongoose = require("mongoose");
 
-
-const userSchema=mongoose.Schema({
-    fullname:{
-        type:String,
-        minLength:3,
-        trim:true,
-    },
-    email:{
-        type:String,
-    },
-    password:{
-        type:String,
-    },
-    cart:{
-        type:Array,
-        default:[],
-    },
-    isAdmin:{
-        type:Boolean,
-    },
-    order:{
-        type:Array,
-        default:[],
-    },
-    contact:{
-        type:Number,
-    },
-    picture:{
-        type:String,
-    }
-
-
-
+// Address sub-schema
+const addressSchema = new mongoose.Schema({
+  line1: String,
+  city: String,
+  state: String,
+  pincode: String,
+  isDefault: { type: Boolean, default: false }
 });
 
-const User=mongoose.model("user",userSchema);
-module.exports=User;
+// Main User schema
+const userSchema = new mongoose.Schema({
+  fullname: {
+    type: String,
+    trim: true,
+    required: true
+  },
+
+  email: {
+    type: String,
+    required: true
+  },
+
+  password: {
+    type: String,
+    required: true
+  },
+
+  // Avatar / Profile picture (optional)
+  picture: {
+    type: String // file name or image path
+  },
+
+  phone: {
+    type: String // changed from Number to String for flexibility
+  },
+
+  cart: [
+    {
+      product: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "product"
+      },
+      quantity: {
+        type: Number,
+        default: 1
+      }
+    }
+  ],
+
+  orders: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "order"
+    }
+  ],
+
+  // New fields
+  addresses: [addressSchema],
+
+ 
+
+}, { timestamps: true });
+
+const User = mongoose.model("user", userSchema);
+module.exports = User;

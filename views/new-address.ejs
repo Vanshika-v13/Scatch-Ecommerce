@@ -1,0 +1,36 @@
+<%- include('./partials/header') %>
+
+<div class="max-w-xl mx-auto mt-10 bg-white p-6 rounded shadow">
+  <h2 class="text-xl font-semibold mb-4">Add New Address</h2>
+
+  <form action="/account/addresses/new<%= redirectTo ? '?redirect=' + redirectTo : '' %>" method="POST" class="space-y-4">
+    <!-- Hidden field for redirect -->
+    <input type="hidden" name="redirectTo" value="<%= redirectTo %>">
+
+    <div>
+      <label class="block font-medium">Address Line</label>
+      <input type="text" name="line1" class="w-full border px-4 py-2 rounded" required />
+    </div>
+
+    <div>
+      <label class="block font-medium">City</label>
+      <input type="text" name="city" class="w-full border px-4 py-2 rounded" required />
+    </div>
+
+    <div>
+      <label class="block font-medium">State</label>
+      <input type="text" name="state" class="w-full border px-4 py-2 rounded" required />
+    </div>
+
+    <div>
+      <label class="block font-medium">Pincode</label>
+      <input type="text" name="pincode" class="w-full border px-4 py-2 rounded" required />
+    </div>
+
+    <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+      Add Address
+    </button>
+  </form>
+</div>
+
+<%- include('./partials/footer') %>

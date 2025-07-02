@@ -1,0 +1,92 @@
+<%- include('./partials/header') %>
+
+<div class="px-6 py-8 lg:px-20 font-sans relative">
+  <!-- Cancel button top-right -->
+  <a href="/shop" class="absolute top-6 right-6 text-red-600 underline font-medium hover:text-red-800">
+    Cancel
+  </a>
+
+  <h2 class="text-2xl font-bold mb-6">Buy Now - Checkout</h2>
+
+  <% if (error.length > 0) { %>
+    <div class="bg-red-100 text-red-600 px-4 py-2 rounded mb-4"><%= error[0] %></div>
+  <% } %>
+
+  <% if (success.length > 0) { %>
+    <div class="bg-green-100 text-green-600 px-4 py-2 rounded mb-4"><%= success[0] %></div>
+  <% } %>
+  
+  <!-- Client-side Error Message -->
+<div id="client-error" class="hidden bg-red-100 text-red-600 px-4 py-2 rounded mb-4"></div>
+
+  <form method="POST" action="/buynow/confirm" class="space-y-6">
+    <!-- Product Summary -->
+    <input type="hidden" name="productId" value="<%= product._id %>">
+    <div class="border p-4 rounded bg-white shadow-sm">
+      <h3 class="text-lg font-semibold mb-2">Product: <%= product.name %></h3>
+      <p>Price: ₹<%= product.price %></p>
+      <p>Quantity:
+        <input type="number" name="quantity" value="1" min="1" class="w-16 border rounded px-2 py-1 ml-2" required>
+      </p>
+    </div>
+
+   <!-- Address Selection -->
+<div class="border p-4 rounded bg-white shadow-sm">
+  <div class="flex justify-between items-center mb-2">
+    <h3 class="text-lg font-semibold">Select Address</h3>
+    <a href="/account" class="text-blue-600 text-sm underline">Change / Add Address</a>
+  </div>
+
+  <% if (addresses.length === 0) { %>
+    <p class="text-gray-500">No saved addresses. 
+      <a href="/account/addresses/new?redirect=/buynow/<%= product._id %>" class="text-blue-600 underline">Add one here</a>.
+    </p>
+  <% } else { %>
+    <select name="addressId" class="w-full border rounded px-2 py-1" required>
+      <% addresses.forEach(address => { %>
+        <option value="<%= address._id %>" 
+                <%= address._id.toString() === defaultAddressId ? "selected" : "" %>>
+          <%= address.line1 ? address.line1 + ', ' : '' %>
+          <%= address.city ? address.city + ', ' : '' %>
+          <%= address.state ? address.state + ', ' : '' %>
+          <%= address.pincode ? address.pincode : '' %>
+        </option>
+      <% }) %>
+    </select>
+  <% } %>
+</div>
+
+
+    <!-- Payment Method -->
+    <div class="border p-4 rounded bg-white shadow-sm">
+      <h3 class="text-lg font-semibold mb-2">Select Payment Method</h3>
+      <label class="block mb-2">
+        <input type="radio" name="paymentMethod" value="cod" required> Cash on Delivery
+      </label>
+      <label class="block">
+        <input type="radio" name="paymentMethod" value="upi" required> UPI
+      </label>
+    </div>
+
+    <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-500 transition">Continue</button>
+  </form>
+</div>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function (e) {
+    const addressSelect = document.querySelector('select[name="addressId"]');
+    const errorBox = document.getElementById("client-error");
+
+    if (!addressSelect || !addressSelect.value) {
+      e.preventDefault();
+      errorBox.textContent = "Please select an address before continuing.";
+      errorBox.classList.remove("hidden");
+      errorBox.scrollIntoView({ behavior: "smooth" });
+    } else {
+      errorBox.classList.add("hidden"); // clear error if all good
+    }
+  });
+</script>
+
+
+<%- include('./partials/footer') %>

@@ -1,0 +1,57 @@
+<%- include('./partials/header') %>
+
+<div class="px-6 py-8 lg:px-20 font-sans relative">
+  <!-- Cancel button top-right -->
+  <a href="/shop" class="absolute top-6 right-6 text-red-600 underline font-medium hover:text-red-800">
+    Cancel
+  </a>
+
+<div class="max-w-4xl mx-auto p-6">
+  <h2 class="text-2xl font-bold mb-6 text-green-700">Confirm Your Order</h2>
+
+  <!-- Address -->
+  <div class="bg-gray-100 p-4 rounded shadow mb-6">
+    <p><strong>Delivery Address:</strong> <%= address.line1 %>, <%= address.city %>, <%= address.state %> - <%= address.pincode %></p>
+    <p class="text-sm text-gray-600"><strong>Expected Delivery:</strong> <%= arrivalDate.toDateString() %></p>
+  </div>
+
+  <!-- Cart Items -->
+  <div class="bg-white p-4 rounded shadow-sm mb-6">
+    <h3 class="text-lg font-semibold mb-4">Items in Your Cart</h3>
+    <ul class="divide-y">
+      <% cartItems.forEach(item => { %>
+        <li class="flex gap-4 py-4">
+          <img src="<%= item.image %>" alt="<%= item.name %>" class="w-24 h-24 object-contain border rounded" />
+          <div class="flex-1">
+            <p class="font-semibold"><%= item.name %></p>
+            <p class="text-sm text-gray-700">Qty: <%= item.quantity %></p>
+            <p class="text-sm text-gray-600">Price After Discount: ₹<%= item.itemTotal.toFixed(2) %></p>
+          </div>
+        </li>
+      <% }) %>
+    </ul>
+  </div>
+
+  <!-- Total Price (Only Final Total) -->
+  <div class="bg-white p-4 rounded shadow mb-6">
+    <h3 class="text-lg font-semibold mb-2">Total Amount</h3>
+    <p class="text-green-700 text-xl font-bold">₹<%= finalTotal.toFixed(2) %></p>
+  </div>
+
+  <!-- Payment Method -->
+  <form action="/place-cart-order" method="POST" class="bg-white p-4 rounded shadow">
+    <input type="hidden" name="addressId" value="<%= address._id %>">
+
+    <h3 class="text-lg font-semibold mb-2">Choose Payment Method</h3>
+    <select name="paymentMethod" required class="w-full border rounded p-2 mb-4">
+      <option value="COD">Cash on Delivery</option>
+      <option value="UPI">UPI</option>
+    </select>
+
+    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded">
+      Place your Order
+    </button>
+  </form>
+</div>
+
+<%- include('./partials/footer') %>

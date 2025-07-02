@@ -1,0 +1,76 @@
+<%- include('./partials/header') %>
+
+<div class="px-6 py-8 lg:px-20 font-sans">
+  <h2 class="text-2xl font-bold mb-6">My Orders</h2>
+
+  <% if (success && success.length > 0) { %>
+    <div class="bg-green-100 text-green-700 p-4 rounded mb-4">
+      <%= success %>
+    </div>
+  <% } %>
+
+  <% if (error && error.length > 0) { %>
+    <div class="bg-red-100 text-red-700 p-4 rounded mb-4">
+      <%= error %>
+    </div>
+  <% } %>
+
+  <% if (orders.length === 0) { %>
+    <p class="text-gray-700">You haven't placed any orders yet.</p>
+  <% } else { %>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <% orders.forEach(order => { %>
+        <div class="bg-white rounded-xl shadow p-5 border">
+          <div class="mb-2 text-sm text-gray-500">Order ID: <%= order._id %></div>
+          <div class="mb-1"><strong>Status:</strong> 
+            <span class="<%= order.status === 'Cancelled' ? 'text-red-600' : order.status === 'Delivered' ? 'text-green-600' : 'text-yellow-600' %>">
+              <%= order.status %>
+            </span>
+          </div>
+          <div class="mb-1"><strong>Total Amount:</strong> ₹<%= order.totalAmount %></div>
+          <div class="mb-1"><strong>Payment:</strong> <%= order.paymentMethod %></div>
+
+          <div class="text-sm text-gray-600 mt-2">
+            <strong>Address:</strong><br>
+            <%= order.address.fullname %>, 
+            <%= order.address.address %>, 
+            <%= order.address.city %> - 
+            <%= order.address.pincode %>, 
+            <%= order.address.state %>
+          </div>
+
+          <div class="mt-4">
+            <h4 class="font-semibold mb-2">Items:</h4>
+            <% order.products.forEach(item => { %>
+              <div class="flex items-center gap-4 mb-3">
+                <img src="<%= item.product.image %>" alt="watch" class="w-14 h-14 rounded border" />
+                <div>
+                  <p class="font-medium"><%= item.product.name %></p>
+                  <p class="text-sm text-gray-500">Quantity: <%= item.quantity %></p>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+
+          <% if (order.status !== "Cancelled" && order.status !== "Delivered") { %>
+            <form action="/cancel-order/<%= order._id %>" method="POST" class="mt-4">
+              <button type="submit" class="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600 transition">
+                Cancel Order
+              </button>
+            </form>
+          <% } else if (order.status === "Cancelled") { %>
+            <p class="text-red-600 mt-4 font-semibold">This order has been cancelled.</p>
+          <% } else if (order.status === "Delivered") { %>
+            <p class="text-green-600 mt-4 font-semibold">Delivered</p>
+          <% } %>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+</div>
+
+<%- include('./partials/footer') %>
+
+
+
+

@@ -1,0 +1,105 @@
+<%- include('./partials/header') %>
+
+<% if (success.length > 0) { %>
+  <div id="flash-msg" class="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 bg-emerald-500 text-white px-6 py-3 rounded-md shadow-lg">
+    <%= success %>
+  </div>
+<% } %>
+
+<!-- Main Shop Layout -->
+<div class="w-full min-h-screen flex px-6 lg:px-20 py-12 bg-[#f4f4f4] font-sans">
+
+  <!-- Sidebar -->
+  <aside class="w-1/4 pr-6 border-r border-gray-300">
+    <!-- Sort By -->
+    <div class="mb-10">
+      <h3 class="text-xl font-semibold text-gray-800 mb-3">Sort By</h3>
+      <form method="GET" action="/shop">
+        <% if (typeof filter !== 'undefined' && filter) { %>
+          <input type="hidden" name="filter" value="<%= filter %>">
+        <% } %>
+        <select name="sort" onchange="this.form.submit()" class="w-full border-gray-300 rounded px-3 py-2 shadow-sm text-gray-700 focus:ring-rose-400">
+          <option value="popular" <%= sort === 'popular' ? 'selected' : '' %>>Popular</option>
+          <option value="new" <%= sort === 'new' ? 'selected' : '' %>>Newest</option>
+          <option value="priceLowHigh" <%= sort === 'priceLowHigh' ? 'selected' : '' %>>Price: Low to High</option>
+          <option value="priceHighLow" <%= sort === 'priceHighLow' ? 'selected' : '' %>>Price: High to Low</option>
+        </select>
+      </form>
+    </div>
+
+    <!-- Filters -->
+    <div>
+      <h3 class="text-xl font-semibold text-gray-800 mb-3">Filters</h3>
+      <ul class="space-y-2 text-gray-600">
+        <li>
+          <a href="/shop" class="hover:text-yellow-600 transition <%= !filter ? 'text-yellow-600 font-semibold' : '' %>">
+            All Watches
+          </a>
+        </li>
+        <li>
+          <a href="/shop?filter=discounted" class="hover:text-yellow-600 transition <%= filter === 'discounted' ? 'text-yellow-600 font-semibold' : '' %>">
+            Discounted
+          </a>
+        </li>
+      </ul>
+    </div>
+  </aside>
+
+  <!-- Products Grid -->
+  <main class="w-3/4 pl-6">
+    <% if (filter === 'discounted') { %>
+      <div class="text-green-600 font-medium mb-4">Showing Discounted Watches</div>
+    <% } else { %>
+      <div class="text-gray-700 font-medium mb-4">Showing All Watches</div>
+    <% } %>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+      <% products.forEach(function(product) { %>
+        <div class="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition duration-300 border border-gray-200 group">
+
+          <!-- Product Image -->
+          <div class="w-full h-56 bg-[<%= product.bgcolor %>] flex items-center justify-center">
+            <% if (product.image) { %>
+              <img class="h-44 object-contain transition duration-200 group-hover:scale-105" src="<%= product.image %>" alt="<%= product.name %>">
+            <% } else { %>
+              <div class="text-center text-sm text-gray-400">No image</div>
+            <% } %>
+          </div>
+
+          <!-- Info Panel -->
+          <div class="bg-[<%= product.panelcolor %>] text-[<%= product.textcolor %>] px-5 py-4 space-y-2">
+            <h3 class="text-md font-semibold tracking-wide"><%= product.name %></h3>
+            <div class="text-sm flex items-center gap-2">
+              <span>₹ <%= product.price %></span>
+              <% if (product.discount > 0) { %>
+                <span class="line-through text-gray-400">₹ <%= Math.floor(product.price / (1 - product.discount / 100)) %></span>
+                <span class="text-green-600 font-medium">-<%= product.discount %>%</span>
+              <% } %>
+            </div>
+
+            <!-- Buttons -->
+            <div class="pt-3 flex gap-3">
+              <a href="/addtocart/<%= product._id %>" 
+                 class="bg-gray-900 text-white text-xs px-4 py-1.5 rounded-full hover:bg-gray-700 transition">
+                Add to Cart
+              </a>
+              <a href="/buynow/<%= product._id %>" 
+                 class="bg-yellow-500 text-white text-xs px-4 py-1.5 rounded-full hover:bg-yellow-600 transition">
+                Buy Now
+              </a>
+            </div>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+  </main>
+</div>
+
+<script>
+  setTimeout(() => {
+    const msg = document.getElementById("flash-msg");
+    if (msg) msg.remove();
+  }, 4000);
+</script>
+
+<%- include('./partials/footer') %>

@@ -1,0 +1,74 @@
+<%- include('./partials/header') %>
+
+<% if (success && success.length > 0) { %>
+  <div id="flash-msg" class="fixed top-5 left-1/2 transform -translate-x-1/2 bg-green-100 border border-green-300 text-green-800 px-4 py-2 rounded shadow-lg flex items-center gap-3 z-50 transition-opacity duration-300">
+    <span><%= success[0] %></span>
+    <button onclick="document.getElementById('flash-msg').remove()" class="ml-2 text-green-700 hover:text-green-900 text-xl leading-none">&times;</button>
+  </div>
+<% } %>
+
+
+
+<div class="min-h-screen bg-gray-100 px-4 md:px-16 py-10 space-y-10">
+  <h2 class="text-3xl font-bold text-gray-900 mb-6 border-b pb-2">My Account</h2>
+
+  <!-- Section: Profile Overview -->
+  <div class="bg-white rounded-lg shadow-md p-6">
+    <h3 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">Profile Overview</h3>
+    <div class="flex items-center gap-6">
+      <img src="<%= user.picture || '/images/default/avatar.jpg' %>" alt="Profile" class="w-24 h-24 rounded-full border object-cover">
+      <div>
+        <p class="text-gray-700"><strong>Name:</strong> <%= user.fullname %></p>
+        <p class="text-gray-700"><strong>Email:</strong> <%= user.email %></p>
+        <% if (user.phone) { %><p class="text-gray-700"><strong>Phone:</strong> <%= user.phone %></p><% } %>
+        <a href="/account/edit" class="text-blue-600 hover:underline text-sm mt-2 inline-block">Edit Profile</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section: Address Book -->
+  <div class="bg-white rounded-lg shadow-md p-6">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-xl font-semibold text-gray-800">Address Book</h3>
+      <a href="/account/addresses/new" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-sm">+ Add Address</a>
+    </div>
+    <% if (user.addresses.length === 0) { %>
+      <p class="text-gray-500 italic">No saved addresses yet.</p>
+    <% } else { %>
+      <ul class="space-y-4">
+        <% user.addresses.forEach(addr => { %>
+  <li class="border p-4 rounded-md bg-gray-50">
+    <p class="text-gray-700"><%= addr.line1 %>, <%= addr.city %>, <%= addr.state %> - <%= addr.pincode %></p>
+    
+    <% if (addr.isDefault) { %>
+      <span class="text-green-600 text-sm font-medium">(Default)</span>
+    <% } else { %>
+      <a href="/account/addresses/default/<%= addr._id %>" class="text-blue-600 text-sm hover:underline">Set as Default</a>
+    <% } %>
+
+    <div class="text-sm mt-2 text-gray-500">
+      <a href="/account/addresses/edit/<%= addr._id %>" class="text-blue-600 hover:underline">Edit</a> | 
+      <a href="/account/addresses/delete/<%= addr._id %>" class="text-red-600 hover:underline">Delete</a>
+    </div>
+  </li>
+<% }) %>
+
+      </ul>
+    <% } %>
+  </div>
+
+  <!-- Section: Security -->
+  <div class="bg-white rounded-lg shadow-md p-6">
+    <h3 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">Security</h3>
+    <a href="/account/changepassword" class="bg-gray-800 hover:bg-black text-white px-4 py-2 rounded-md text-sm">Change Password</a>
+  </div>
+</div>
+
+<script>
+  setTimeout(() => {
+    const msg = document.getElementById("flash-msg");
+    if (msg) msg.remove();
+  }, 4000); // Auto-dismiss after 4 seconds
+</script>
+
+<%- include('./partials/footer') %>

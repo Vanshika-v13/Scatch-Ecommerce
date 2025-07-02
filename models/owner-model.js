@@ -26,6 +26,7 @@ const ownerSchema=mongoose.Schema({
     },
     gstin:String,
 
+    role: { type: String, default: "owner" } ,
 
 
 });

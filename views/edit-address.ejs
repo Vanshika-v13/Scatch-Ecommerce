@@ -1,0 +1,32 @@
+<%- include('./partials/header') %>
+
+<div class="max-w-xl mx-auto mt-10 bg-white p-6 rounded shadow">
+  <h2 class="text-xl font-bold mb-4">Edit Address</h2>
+
+  <form action="/account/addresses/edit/<%= address._id %>" method="POST" class="space-y-4">
+    <div>
+      <label class="block font-semibold">Address Line</label>
+      <input type="text" name="line1" value="<%= address.line1 %>" class="w-full border px-3 py-2 rounded" required />
+    </div>
+
+    <div>
+      <label class="block font-semibold">City</label>
+      <input type="text" name="city" value="<%= address.city %>" class="w-full border px-3 py-2 rounded" required />
+    </div>
+
+    <div>
+      <label class="block font-semibold">State</label>
+      <input type="text" name="state" value="<%= address.state %>" class="w-full border px-3 py-2 rounded" required />
+    </div>
+
+    <div>
+      <label class="block font-semibold">Pincode</label>
+      <input type="text" name="pincode" value="<%= address.pincode %>" class="w-full border px-3 py-2 rounded" required />
+    </div>
+
+    <div class="flex justify-between">
+      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Update</button>
+      <a href="/account" class="text-gray-600 hover:underline">Cancel</a>
+    </div>
+  </form>
+</div>
