@@ -58,5 +58,5 @@ app.use("/",myOrderRouter);
 app.use("/",adminOrderRouter);
 
 app.listen(PORT,()=>{
- console.log("Server on listening on port 3000");
+ console.log(`Server on listening on port ${PORT}`);
 });
