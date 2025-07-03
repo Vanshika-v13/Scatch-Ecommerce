@@ -14,15 +14,13 @@ router.post("/create", upload.single("image"), async (req, res) => {
     }
 
     const product = await productModel.create({
-      image: `/images/uploads/${req.file.filename}`, // Save path
+      image: `/images/uploads/${req.file.filename}`, 
       name,
       price,
       discount,
       bgcolor,
       panelcolor,
       textcolor,
-      platformFee,      
-    shippingFee,
     });
 
   

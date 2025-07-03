@@ -21,7 +21,11 @@ rawOrders.forEach(order => {
   ordersByUser[userId].orders.push(order);
 });
 
-res.render("admin-orders", { ordersByUser: Object.values(ordersByUser) });
+res.render("admin-orders", {
+  ordersByUser: Object.values(ordersByUser),
+  success: req.flash("success"),
+  error: req.flash("error"),
+});
 
 });
 

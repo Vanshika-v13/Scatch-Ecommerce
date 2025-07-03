@@ -1,11 +1,18 @@
 <%- include('./adminpartials/header') %>
 
   <!-- Flash Message -->
-  <% if(success && success.length > 0) { %>
-    <div id="flash-msg" class="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 bg-blue-500 text-white px-6 py-3 rounded-md shadow-lg">
-      <%= success %>
-    </div>
-  <% } %>
+  <% if (success && success.length > 0) { %>
+  <div id="flash-msg-success" class="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 bg-green-500 text-white px-6 py-3 rounded-md shadow-lg">
+    <%= success %>
+  </div>
+<% } %>
+
+<% if (error && error.length > 0) { %>
+  <div id="flash-msg-error" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-red-500 text-white px-6 py-3 rounded-md shadow-lg">
+    <%= error %>
+  </div>
+<% } %>
+
 
   <!-- Product Creation Panel -->
   <div class="min-h-screen bg-gray-100 flex justify-center px-4 pt-6 pb-10">
@@ -64,5 +71,15 @@
       if (msg) msg.remove();
     }, 4000);
   </script>
+
+  <script>
+  setTimeout(() => {
+    const successMsg = document.getElementById("flash-msg-success");
+    const errorMsg = document.getElementById("flash-msg-error");
+    if (successMsg) successMsg.remove();
+    if (errorMsg) errorMsg.remove();
+  }, 4000);
+</script>
+
 
 <%- include('./adminpartials/footer') %>

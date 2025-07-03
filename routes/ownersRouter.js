@@ -79,8 +79,11 @@ router.get("/login", (req, res) => {
 // Admin panel (protected)
 router.get("/admin", isOwner, (req, res) => {
   const success = req.flash("success");
-  res.render("createProduct", { success });
+  const error = req.flash("error"); 
+
+  res.render("createProduct", { success, error }); 
 });
+
 
 
 // Logout
