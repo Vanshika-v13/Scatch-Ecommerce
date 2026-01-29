@@ -1,8 +1,8 @@
-const express=require("express");
+const express = require("express");
 
-const router=express.Router();
-const upload=require("../config/multer-config");
-const productModel=require("../models/product-model");
+const router = express.Router();
+const upload = require("../config/multer-config");
+const productModel = require("../models/product-model");
 
 router.post("/create", upload.single("image"), async (req, res) => {
   try {
@@ -13,17 +13,24 @@ router.post("/create", upload.single("image"), async (req, res) => {
       return res.redirect("/owners/admin");
     }
 
+    const numericPrice = Number(price);
+    const numericDiscount = Number(discount) || 0;
+
+    if (isNaN(numericPrice)) {
+      req.flash("error", "Price must be a valid number.");
+      return res.redirect("/owners/admin");
+    }
+
     const product = await productModel.create({
-      image: `/images/uploads/${req.file.filename}`, 
+      image: `/images/uploads/${req.file.filename}`,
       name,
-      price,
-      discount,
+      price: numericPrice,
+      discount: numericDiscount,
       bgcolor,
       panelcolor,
       textcolor,
     });
 
-  
     req.flash("success", "Product created successfully");
     res.redirect("/owners/admin");
   } catch (err) {
@@ -33,7 +40,4 @@ router.post("/create", upload.single("image"), async (req, res) => {
   }
 });
 
-
-
-
-module.exports=router;
+module.exports = router;

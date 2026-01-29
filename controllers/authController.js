@@ -1,10 +1,8 @@
-const userModel=require("../models/user-model");
-const bcrypt=require("bcrypt");
-const jwt=require("jsonwebtoken");
-const {generateToken}=require("../utils/generateToken");
+const userModel = require("../models/user-model");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const { generateToken } = require("../utils/generateToken");
 const Product = require("../models/product-model");
-
-
 
 module.exports.registerUser = async (req, res) => {
   try {
@@ -34,10 +32,9 @@ module.exports.registerUser = async (req, res) => {
     res.cookie("token", token);
 
     req.flash("success", "Account created successfully. Please login.");
-    
-     return res.redirect("/");
-    // res.redirect("/show-success");
 
+    return res.redirect("/");
+    // res.redirect("/show-success");
   } catch (error) {
     console.error("Registration Error:", error);
     req.flash("error", "Something went wrong during registration.");
@@ -45,36 +42,33 @@ module.exports.registerUser = async (req, res) => {
   }
 };
 
-
-module.exports.loginUser=async(req,res)=>{
-const {email,password}=req.body;
-const user=await userModel.findOne({email:email});
-if(!user){
-    req.flash("error","email or password incorrect");
-    return  res.redirect("/");
-}
-bcrypt.compare(password,user.password, async function(err, result){
-if(result){
-    const token=generateToken(user);
-    res.cookie("token",token);
-   try {
-        const products = await Product.find(); 
-       const success = req.flash("success");
-const error = req.flash("error");
-res.redirect("/shop") ;  
+module.exports.loginUser = async (req, res) => {
+  const { email, password } = req.body;
+  const user = await userModel.findOne({ email: email });
+  if (!user) {
+    req.flash("error", "email or password incorrect");
+    return res.redirect("/");
+  }
+  bcrypt.compare(password, user.password, async function (err, result) {
+    if (result) {
+      const token = generateToken(user);
+      res.cookie("token", token);
+      try {
+        const products = await Product.find();
+        const success = req.flash("success");
+        const error = req.flash("error");
+        res.redirect("/shop");
       } catch (error) {
         res.status(500).send("Error loading products: " + error.message);
       }
-}else{ 
-    req.flash("error","email or password incorrect");
-    return  res.redirect("/");
-}
+    } else {
+      req.flash("error", "email or password incorrect");
+      return res.redirect("/");
+    }
+  });
+};
 
-});
-}
-
-
-module.exports.logoutUser=function(req,res){
- res.clearCookie("token");
-res.redirect("/");
+module.exports.logoutUser = function (req, res) {
+  res.clearCookie("token");
+  res.redirect("/");
 };

@@ -1,17 +1,21 @@
-const express=require("express");
-const router=express.Router();
+const express = require("express");
+const router = express.Router();
 
 const isLoggedIn = require("../middlewares/isLoggedIn");
-const productModel=require("../models/product-model");
-const userModel=require("../models/user-model");
+const productModel = require("../models/product-model");
+const userModel = require("../models/user-model");
 const multer = require("multer");
+const uploadAvatar = require("../config/multer-avatar");
 
 const upload = multer({ dest: "public/uploads/" });
 const bcrypt = require("bcrypt");
 
 // GET route – Show Change Password form
 router.get("/changepassword", isLoggedIn, (req, res) => {
-  res.render("change-password", { error: req.flash("error"), success: req.flash("success") });
+  res.render("change-password", {
+    error: req.flash("error"),
+    success: req.flash("success"),
+  });
 });
 
 // POST route – Update password
@@ -38,16 +42,11 @@ router.post("/changepassword", isLoggedIn, async (req, res) => {
   res.redirect("/account");
 });
 
-
-
 router.get("/", isLoggedIn, async (req, res) => {
   const user = await userModel.findById(req.user._id);
   const success = req.flash("success");
-res.render("account", { user, success });
+  res.render("account", { user, success });
 });
-
-
-
 
 router.get("/edit", isLoggedIn, async (req, res) => {
   const user = await userModel.findById(req.user._id);
@@ -59,7 +58,7 @@ router.post("/edit", isLoggedIn, upload.single("avatar"), async (req, res) => {
 
   const updatedData = {
     fullname,
-    phone
+    phone,
   };
 
   if (req.file) {
@@ -71,26 +70,22 @@ router.post("/edit", isLoggedIn, upload.single("avatar"), async (req, res) => {
   res.redirect("/account");
 });
 
-
 router.post("/addresses/new", isLoggedIn, async (req, res) => {
   const { line1, city, state, pincode, redirectTo } = req.body;
 
   await userModel.findByIdAndUpdate(req.user._id, {
     $push: {
-      addresses: { line1, city, state, pincode }
-    }
+      addresses: { line1, city, state, pincode },
+    },
   });
 
   res.redirect(redirectTo || "/account");
 });
 
-
 router.get("/addresses/new", isLoggedIn, (req, res) => {
   const redirectTo = req.query.redirect || "/account"; // default
   res.render("new-address", { redirectTo });
 });
-
-
 
 router.post("/addresses/edit/:id", isLoggedIn, async (req, res) => {
   const { line1, city, state, pincode } = req.body;
@@ -113,34 +108,31 @@ router.get("/addresses/edit/:id", isLoggedIn, async (req, res) => {
   res.render("edit-address", { address });
 });
 
-
-router.get('/addresses/default/:id', isLoggedIn, async (req, res) => {
+router.get("/addresses/default/:id", isLoggedIn, async (req, res) => {
   const user = await userModel.findById(req.user._id);
 
-  user.addresses.forEach(addr => {
+  user.addresses.forEach((addr) => {
     addr.isDefault = false;
   });
 
-  
   const selectedAddress = user.addresses.id(req.params.id);
   if (!selectedAddress) {
-    req.flash('error', 'Address not found');
-    return res.redirect('/account');
+    req.flash("error", "Address not found");
+    return res.redirect("/account");
   }
 
   selectedAddress.isDefault = true;
   await user.save();
 
-  req.flash('success', 'Default address updated.');
-  res.redirect('/account');
+  req.flash("success", "Default address updated.");
+  res.redirect("/account");
 });
-
 
 router.get("/addresses/delete/:id", isLoggedIn, async (req, res) => {
   await userModel.findByIdAndUpdate(req.user._id, {
-    $pull: { addresses: { _id: req.params.id } }
+    $pull: { addresses: { _id: req.params.id } },
   });
   res.redirect("/account");
 });
 
-module.exports=router;
+module.exports = router;

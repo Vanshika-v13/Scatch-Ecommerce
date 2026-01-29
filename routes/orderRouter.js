@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const orderModel = require("../models/order-model");
-const userModel=require("../models/user-model");
-const productModel=require("../models/product-model");
+const userModel = require("../models/user-model");
+const productModel = require("../models/product-model");
 const isLoggedIn = require("../middlewares/isLoggedIn");
 
 // Place Order Route
@@ -17,9 +17,9 @@ router.post("/place-order", isLoggedIn, async (req, res) => {
 
       const newOrder = await orderModel.create({
         user: req.user._id,
-        products: [{ product: product._id, quantity: 1 }],
+        products: [{ product: product._id, quantity: 1, price: product.price }],
         totalAmount,
-        address: { fullname, address, city, pincode }
+        address: { fullname, address, city, pincode },
       });
 
       delete req.session.buyNow; // Clear session
@@ -28,18 +28,24 @@ router.post("/place-order", isLoggedIn, async (req, res) => {
     }
 
     // For Cart Orders
-    const user = await userModel.findById(req.user._id).populate("cart.product");
-    const validItems = user.cart.filter(item => item.product);
-    const totalAmount = validItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+    const user = await userModel
+      .findById(req.user._id)
+      .populate("cart.product");
+    const validItems = user.cart.filter((item) => item.product);
+    const totalAmount = validItems.reduce(
+      (sum, item) => sum + item.product.price * item.quantity,
+      0,
+    );
 
     const order = await orderModel.create({
       user: req.user._id,
-      products: validItems.map(item => ({
+      products: validItems.map((item) => ({
         product: item.product._id,
-        quantity: item.quantity
+        quantity: item.quantity,
+        price: item.product.price,
       })),
       totalAmount,
-      address: { fullname, address, city, pincode }
+      address: { fullname, address, city, pincode },
     });
 
     // Clear user cart
@@ -48,7 +54,6 @@ router.post("/place-order", isLoggedIn, async (req, res) => {
 
     req.flash("success", "Order placed successfully!");
     res.redirect("/orders");
-
   } catch (err) {
     console.error(err);
     req.flash("error", "Failed to place order.");
@@ -57,20 +62,17 @@ router.post("/place-order", isLoggedIn, async (req, res) => {
 });
 
 router.get("/orders", isLoggedIn, async (req, res) => {
- router.get("/orders", isLoggedIn, async (req, res) => {
-  console.log("Reached /orders route ✅"); // add this
-  const orders = await orderModel
-    .find({ user: req.user._id })
-    .populate("products.product");
+  router.get("/orders", isLoggedIn, async (req, res) => {
+    console.log("Reached /orders route ✅"); // add this
+    const orders = await orderModel
+      .find({ user: req.user._id })
+      .populate("products.product");
 
-  const success = req.flash("success");
-  const error = req.flash("error");
+    const success = req.flash("success");
+    const error = req.flash("error");
 
-  res.render("orders", { orders, success, error });
+    res.render("orders", { orders, success, error });
+  });
 });
-
-
-});
-
 
 module.exports = router;

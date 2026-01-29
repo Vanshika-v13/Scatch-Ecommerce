@@ -1,25 +1,25 @@
-const express=require("express");
-const router=express.Router();
+const express = require("express");
+const router = express.Router();
 
 const isLoggedIn = require("../middlewares/isLoggedIn");
-const productModel=require("../models/product-model");
-const userModel=require("../models/user-model");
-const orderModel=require("../models/order-model");
+const productModel = require("../models/product-model");
+const userModel = require("../models/user-model");
+const orderModel = require("../models/order-model");
 
 router.get("/myorders", isLoggedIn, async (req, res) => {
   try {
     const user = await userModel.findById(req.user._id).populate({
       path: "orders",
       populate: {
-        path: "products.product"
-      }
+        path: "products.product",
+      },
     });
 
     res.render("myorders", {
       user,
       orders: user.orders,
       success: req.flash("success"),
-      error: req.flash("error")
+      error: req.flash("error"),
     });
   } catch (err) {
     console.error("Error loading orders:", err);
@@ -53,7 +53,6 @@ router.post("/cancel-order/:orderId", isLoggedIn, async (req, res) => {
       return res.redirect("/myorders");
     }
 
-    // Mark as cancelled
     order.status = "Cancelled";
     await order.save();
 
@@ -66,5 +65,67 @@ router.post("/cancel-order/:orderId", isLoggedIn, async (req, res) => {
   }
 });
 
- 
-module.exports=router;
+router.post(
+  "/cancel-order-item/:orderId/:productId",
+  isLoggedIn,
+  async (req, res) => {
+    try {
+      const order = await orderModel
+        .findById(req.params.orderId)
+        .populate("products.product"); // populate product to access price safely
+
+      if (!order || order.user.toString() !== req.user._id.toString()) {
+        req.flash("error", "Order not found or unauthorized.");
+        return res.redirect("/myorders");
+      }
+
+      // Find the product in the order
+      const item = order.products.find(
+        (p) => p.product._id.toString() === req.params.productId,
+      );
+
+      if (!item) {
+        req.flash("error", "Product not found in order.");
+        return res.redirect("/myorders");
+      }
+
+      if (item.status === "Cancelled") {
+        req.flash("error", "Product already cancelled.");
+        return res.redirect("/myorders");
+      }
+
+      // Cannot cancel if order shipped/delivered
+      if (order.status === "Shipped" || order.status === "Delivered") {
+        req.flash("error", "Cannot cancel product after shipment.");
+        return res.redirect("/myorders");
+      }
+
+      // Mark product as cancelled
+      item.status = "Cancelled";
+
+      // Recalculate totalAmount for active products only
+      order.totalAmount = order.products
+        .filter((p) => p.status !== "Cancelled")
+        .reduce(
+          (sum, p) => sum + (p.price ?? p.product.price ?? 0) * p.quantity,
+          0,
+        );
+
+      // If all products cancelled, mark order as Cancelled
+      if (order.products.every((p) => p.status === "Cancelled")) {
+        order.status = "Cancelled";
+      }
+
+      await order.save();
+
+      req.flash("success", "Product cancelled successfully.");
+      res.redirect("/myorders");
+    } catch (err) {
+      console.error("Cancel product error:", err);
+      req.flash("error", "Failed to cancel product.");
+      res.redirect("/myorders");
+    }
+  },
+);
+
+module.exports = router;

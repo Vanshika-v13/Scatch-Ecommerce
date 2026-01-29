@@ -1,66 +1,112 @@
 <%- include('./partials/header') %>
 
 <div class="px-6 py-8 lg:px-20 font-sans relative">
-  <!-- Cancel button top-right -->
+  <!-- Cancel button -->
   <a href="/shop" class="absolute top-6 right-6 text-red-600 underline font-medium hover:text-red-800">
     Cancel
   </a>
 
+  <div class="max-w-4xl mx-auto p-6">
+    <h2 class="text-xl font-bold mb-6 text-gray-800">Confirm Your Order</h2>
 
-<div class="px-6 py-8 lg:px-20 font-sans">
-  <h2 class="text-2xl font-bold mb-6">Order Summary</h2>
-
-  <form action="/buynow/place-order" method="POST" class="space-y-6">
-    <!-- Hidden inputs for final POST -->
-    <input type="hidden" name="productId" value="<%= product._id %>">
-    <input type="hidden" name="quantity" value="<%= quantity %>">
-    <input type="hidden" name="addressId" value="<%= address._id %>">
-    <input type="hidden" name="paymentMethod" value="<%= paymentMethod %>">
-
-    <!-- Address Section -->
-    <div class="border p-4 rounded bg-white shadow-sm mb-4">
-      <h3 class="font-semibold text-lg mb-2">Shipping Address</h3>
-      <p>
-        <%= address.line1 %>, <%= address.city %>, <%= address.state %>, <%= address.pincode %>
+    <!-- Address -->
+    <div class="bg-gray-100 p-4 rounded shadow mb-6">
+      <p class="mb-2">
+        <strong>Delivery Address:</strong>
+        <%= address.line1 %>, <%= address.city %>, <%= address.state %> - <%=
+        address.pincode %>
       </p>
-      <a href="/account" class="text-blue-600 underline text-sm">Change Address</a>
+      <p class="text-sm text-gray-600">
+        <strong>Expected Delivery:</strong>
+        <%= arrivalDate.toLocaleDateString() %>
+      </p>
     </div>
 
     <!-- Product Summary -->
-    <div class="border p-4 rounded bg-white shadow-sm mb-4 flex gap-6">
-      <img src="<%= product.image %>" class="w-32 h-32 object-cover rounded" alt="Product">
-      <div>
+    <div class="bg-white p-4 rounded shadow-sm mb-6 flex gap-6">
+      <img src="<%= product.image %>" class="w-32 h-32 object-cover rounded" alt="Product" />
+
+      <div class="flex-1">
         <h3 class="text-xl font-semibold"><%= product.name %></h3>
         <p>Quantity: <%= quantity %></p>
-        <p>Payment Mode: <%= paymentMethod.toUpperCase() %></p>
-        <p>Arriving By: <%= arrivalDate.toDateString() %></p>
+        <p>Arriving By: <%= arrivalDate.toLocaleDateString() %></p>
       </div>
     </div>
 
     <!-- Bill Section -->
-    <div class="border p-4 rounded bg-white shadow-sm">
+    <div class="bg-white p-4 rounded shadow-sm mb-6">
       <h3 class="text-lg font-semibold mb-2">Bill Details</h3>
+
       <div class="flex justify-between mb-1">
         <span>Item Total:</span>
         <span>₹<%= price %></span>
       </div>
+
       <div class="flex justify-between mb-1">
         <span>Shipping Fee:</span>
         <span>₹<%= shippingFee %></span>
       </div>
-      <div class="flex justify-between font-bold text-lg">
+
+      <div class="flex justify-between font-bold text-lg border-t pt-2">
         <span>Total:</span>
         <span>₹<%= total %></span>
       </div>
     </div>
 
-    <!-- Submit Button -->
-    <div class="mt-6">
-      <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-500 transition">
+    <!-- Payment Method -->
+    <form action="/buynow/place-order" method="POST" class="bg-white p-4 rounded shadow-sm">
+      <input type="hidden" name="productId" value="<%= product._id %>" />
+      <input type="hidden" name="quantity" value="<%= quantity %>" />
+      <input type="hidden" name="addressId" value="<%= address._id %>" />
+      <input type="hidden" name="paymentMethod" value="<%= paymentMethod %>" />
+
+      <!-- Payment Method -->
+      <div class="bg-white border rounded-lg p-5 shadow-sm mb-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-3">
+          Payment Method
+        </h3>
+
+        <div class="flex items-center justify-between bg-gray-50 p-4 rounded-md gap-x-4 ">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 flex items-center justify-center rounded-full bg-yellow-100 text-yellow-600 text-lg">
+              <% if (paymentMethod === "cod") { %>₹<% } else { %>📱<% } %>
+            </div>
+
+            <div>
+              <p class="font-medium text-gray-900">
+                <% if (paymentMethod === "cod") { %>
+                Cash on Delivery
+                <% } else { %>
+                UPI Payment
+                <% } %>
+              </p>
+              <p class="text-sm text-gray-500">
+                <% if (paymentMethod === "cod") { %>
+                Pay in cash when your order is delivered
+                <% } else { %>
+                Secure payment using any UPI app
+                <% } %>
+              </p>
+            </div>
+           
+          </div>
+
+           <div>
+              <span class="text-green-600 font-semibold text-sm">
+                ✔ Selected
+              </span>
+            </div>
+
+        </div>
+      </div>
+
+
+
+      <button type="submit" class="bg-yellow-500 text-white px-6 py-2 rounded-lg text-lg font-medium hover:bg-yellow-600 transition">
         Place Your Order
       </button>
-    </div>
-  </form>
+    </form>
+  </div>
 </div>
 
 <%- include('./partials/footer') %>

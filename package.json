@@ -3,12 +3,14 @@
   "version": "1.0.0",
   "main": "app.js",
   "scripts": {
-    "start": "node app.js"
+    "start": "node app.js",
+    "dev": "concurrently \"npx tailwindcss -i ./src/input.css -o ./public/css/tailwind.css --watch\" \"nodemon app.js\""
   },
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@tailwindcss/cli": "^4.1.18",
     "bcrypt": "^6.0.0",
     "config": "^4.0.0",
     "connect-flash": "^0.1.1",
@@ -22,6 +24,10 @@
     "mongoose": "^8.15.1",
     "multer": "^2.0.1",
     "nodemon": "^3.1.10",
+    "tailwindcss": "^4.1.18",
     "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
   }
 }

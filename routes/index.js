@@ -1,20 +1,17 @@
-const express=require("express");
-const router=express.Router();
+const express = require("express");
+const router = express.Router();
 
 const isLoggedIn = require("../middlewares/isLoggedIn");
-const productModel=require("../models/product-model");
-const userModel=require("../models/user-model");
-const orderModel=require("../models/order-model");
+const productModel = require("../models/product-model");
+const userModel = require("../models/user-model");
+const orderModel = require("../models/order-model");
 
 router.get("/", (req, res) => {
   const success = req.flash("success");
   const error = req.flash("error");
 
-
   res.render("index", { success, error, loggedin: false });
 });
-
-
 
 router.get("/shop", isLoggedIn, async (req, res) => {
   const { filter, sort } = req.query;
@@ -47,21 +44,22 @@ router.get("/shop", isLoggedIn, async (req, res) => {
     products,
     success,
     error,
-    filter,sort // Pass filter for highlighting
+    filter,
+    sort, // Pass filter for highlighting
   });
 });
 
-
-
 router.get("/cart", isLoggedIn, async (req, res) => {
   try {
-    const user = await userModel.findById(req.user._id).populate("cart.product");
+    const user = await userModel
+      .findById(req.user._id)
+      .populate("cart.product");
 
     let subtotal = 0;
 
     const cartItems = user.cart
-      .filter(item => item.product !== null)
-      .map(item => {
+      .filter((item) => item.product !== null)
+      .map((item) => {
         const product = item.product;
         const quantity = item.quantity;
         const price = Number(product.price);
@@ -85,7 +83,7 @@ router.get("/cart", isLoggedIn, async (req, res) => {
           quantity,
           totalMRP,
           discountAmount,
-          netTotal
+          netTotal,
         };
       });
 
@@ -100,15 +98,13 @@ router.get("/cart", isLoggedIn, async (req, res) => {
   }
 });
 
-
-
-
 router.get("/addtocart/:productid", isLoggedIn, async (req, res) => {
   try {
     const user = await userModel.findById(req.user._id);
 
     const existingItem = user.cart.find(
-      item => item.product && item.product.toString() === req.params.productid
+      (item) =>
+        item.product && item.product.toString() === req.params.productid,
     );
 
     if (existingItem) {
@@ -116,7 +112,7 @@ router.get("/addtocart/:productid", isLoggedIn, async (req, res) => {
     } else {
       user.cart.push({
         product: req.params.productid,
-        quantity: 1
+        quantity: 1,
       });
     }
 
@@ -134,7 +130,9 @@ router.get("/addtocart/:productid", isLoggedIn, async (req, res) => {
 router.post("/cart/increase/:productid", isLoggedIn, async (req, res) => {
   try {
     const user = await userModel.findById(req.user._id);
-    const item = user.cart.find(i => i.product && i.product.toString() === req.params.productid);
+    const item = user.cart.find(
+      (i) => i.product && i.product.toString() === req.params.productid,
+    );
     if (item) item.quantity++;
     await user.save();
     res.sendStatus(200);
@@ -148,11 +146,15 @@ router.post("/cart/increase/:productid", isLoggedIn, async (req, res) => {
 router.post("/cart/decrease/:productid", isLoggedIn, async (req, res) => {
   try {
     const user = await userModel.findById(req.user._id);
-    const item = user.cart.find(i => i.product && i.product.toString() === req.params.productid);
+    const item = user.cart.find(
+      (i) => i.product && i.product.toString() === req.params.productid,
+    );
     if (item && item.quantity > 1) {
       item.quantity--;
     } else {
-      user.cart = user.cart.filter(i => i.product.toString() !== req.params.productid);
+      user.cart = user.cart.filter(
+        (i) => i.product.toString() !== req.params.productid,
+      );
     }
     await user.save();
     res.sendStatus(200);
@@ -167,7 +169,7 @@ router.get("/clearcart", isLoggedIn, async (req, res) => {
     const user = await userModel.findById(req.user._id);
     user.cart = [];
     await user.save();
-    req.flash("success", "Cart cleared successfully!");
+
     res.redirect("/cart");
   } catch (err) {
     console.error(err);
@@ -178,18 +180,21 @@ router.get("/clearcart", isLoggedIn, async (req, res) => {
 
 router.get("/checkout", isLoggedIn, async (req, res) => {
   try {
-    const user = await userModel.findById(req.user._id).populate("cart.product");
+    const user = await userModel
+      .findById(req.user._id)
+      .populate("cart.product");
 
     const addresses = user.addresses || [];
-    const defaultAddress = addresses.find(addr => addr.isDefault) || addresses[0];
+    const defaultAddress =
+      addresses.find((addr) => addr.isDefault) || addresses[0];
     const defaultAddressId = defaultAddress?._id?.toString();
 
     const platformFee = 20;
     const shippingFee = 49;
 
     const cartItems = user.cart
-      .filter(item => item.product)
-      .map(item => {
+      .filter((item) => item.product)
+      .map((item) => {
         const price = Number(item.product.price);
         const discount = Number(item.product.discount || 0);
         const quantity = item.quantity;
@@ -203,17 +208,22 @@ router.get("/checkout", isLoggedIn, async (req, res) => {
           product: item.product,
           quantity,
           discountAmount,
-          netTotal
+          netTotal,
         };
       });
 
-    const subtotal = +cartItems.reduce((sum, item) => sum + item.netTotal, 0).toFixed(2);
-    const totalAmount = cartItems.length === 0 ? 0 : +(subtotal + platformFee + shippingFee).toFixed(2);
+    const subtotal = +cartItems
+      .reduce((sum, item) => sum + item.netTotal, 0)
+      .toFixed(2);
+    const totalAmount =
+      cartItems.length === 0
+        ? 0
+        : +(subtotal + platformFee + shippingFee).toFixed(2);
 
     res.render("checkout", {
       user,
       addresses,
-      defaultAddressId,  
+      defaultAddressId,
       cartItems,
       totalAmount,
       platformFee,
@@ -228,11 +238,12 @@ router.get("/checkout", isLoggedIn, async (req, res) => {
   }
 });
 
-
 router.post("/confirm-cart-order", isLoggedIn, async (req, res) => {
   try {
     const { addressId } = req.body;
-    const user = await userModel.findById(req.user._id).populate("cart.product");
+    const user = await userModel
+      .findById(req.user._id)
+      .populate("cart.product");
     const address = user.addresses.id(addressId);
     if (!address) return res.redirect("/checkout");
 
@@ -243,7 +254,7 @@ router.post("/confirm-cart-order", isLoggedIn, async (req, res) => {
     const shippingFee = 49;
     let subtotal = 0;
 
-    const cartItems = user.cart.map(item => {
+    const cartItems = user.cart.map((item) => {
       const product = item.product;
       const quantity = item.quantity;
 
@@ -262,7 +273,7 @@ router.post("/confirm-cart-order", isLoggedIn, async (req, res) => {
         price,
         discount,
         discountAmount,
-        itemTotal: netPrice
+        itemTotal: netPrice,
       };
     });
 
@@ -275,87 +286,84 @@ router.post("/confirm-cart-order", isLoggedIn, async (req, res) => {
       finalTotal,
       platformFee,
       shippingFee,
-      subtotal
+      subtotal,
     });
-
   } catch (err) {
     console.error("Confirm cart order error:", err);
     res.redirect("/checkout");
   }
 });
 
-
-
-
 router.post("/place-cart-order", isLoggedIn, async (req, res) => {
   try {
     const { addressId, paymentMethod } = req.body;
-    const user = await userModel.findById(req.user._id).populate("cart.product");
-    const address = user.addresses.id(addressId);
+    const user = await userModel
+      .findById(req.user._id)
+      .populate("cart.product");
 
+    const address = user.addresses.id(addressId);
     const platformFee = 20;
     const shippingFee = 49;
 
-    const validItems = user.cart.filter(item => item.product);
+    const validItems = user.cart.filter((item) => item.product);
 
     // Calculate subtotal with discount
     let subtotal = validItems.reduce((sum, item) => {
       const price = item.product.price;
       const discount = item.product.discount || 0;
       const discountAmount = price * (discount / 100);
-      const finalPrice = price - discountAmount;
+      const finalPrice = price - discountAmount; // Apply discount only once
       return sum + finalPrice * item.quantity;
     }, 0);
 
-    // ✅ Round subtotal and totalAmount to 2 decimal places
     subtotal = +subtotal.toFixed(2);
     const totalAmount = +(subtotal + platformFee + shippingFee).toFixed(2);
 
     const order = await orderModel.create({
       user: req.user._id,
-      products: validItems.map(item => ({
-        product: item.product._id,
-        quantity: item.quantity
-      })),
+      products: validItems.map((item) => {
+        const price = item.product.price;
+        const discount = item.product.discount || 0;
+        const discountAmount = price * (discount / 100);
+        const finalPrice = +(price - discountAmount).toFixed(2);
+
+        return {
+          product: item.product._id,
+          quantity: item.quantity,
+          price: finalPrice, // Store price in order
+        };
+      }),
       totalAmount,
-       platformFee,        
-  shippingFee,
+      platformFee,
+      shippingFee,
       address: {
         fullname: user.fullname,
         address: address.line1,
         city: address.city,
         pincode: address.pincode,
-        state: address.state
+        state: address.state,
       },
-      paymentMethod
+      paymentMethod,
     });
 
-      user.orders.push(order._id);
-    // Clear cart
-    user.cart = [];
+    user.orders.push(order._id);
+    user.cart = []; // Clear cart after order
     await user.save();
 
-    // Estimated delivery date
     const arrivalDate = new Date();
     arrivalDate.setDate(arrivalDate.getDate() + 5);
 
-    // Render order success page
     res.render("order-success", {
-      fromOrderId: false, // came from cart
+      fromOrderId: false,
       user,
       address: order.address,
       deliveryDate: arrivalDate,
-      products: validItems.map(item => ({
+      products: validItems.map((item) => ({
         image: item.product.image,
         name: item.product.name,
         quantity: item.quantity,
-        products: validItems.map(item => ({
-    image: item.product.image,
-    name: item.product.name,
-    quantity: item.quantity
-  })),
       })),
-      totalAmount
+      totalAmount,
     });
   } catch (err) {
     console.error("Place Cart Order Error:", err);
@@ -364,22 +372,22 @@ router.post("/place-cart-order", isLoggedIn, async (req, res) => {
   }
 });
 
-
-
-
-router.get("/logout",isLoggedIn,(req,res)=>{
-res.render("shop");
+router.get("/logout", isLoggedIn, (req, res) => {
+  res.render("shop");
 });
 
-
-router.get('/myaccount', isLoggedIn, async (req, res) => {
+router.get("/myaccount", isLoggedIn, async (req, res) => {
   try {
     const user = await userModel.findById(req.user._id);
-    res.render('myaccount', { user, success: req.flash('success'), error: req.flash('error') });
+    res.render("myaccount", {
+      user,
+      success: req.flash("success"),
+      error: req.flash("error"),
+    });
   } catch (err) {
-    req.flash('error', 'Something went wrong.');
-    res.redirect('/');
+    req.flash("error", "Something went wrong.");
+    res.redirect("/");
   }
 });
 
-module.exports=router;
+module.exports = router;

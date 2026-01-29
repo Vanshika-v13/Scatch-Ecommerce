@@ -4,13 +4,13 @@
   <h2 class="text-2xl font-bold mb-6">My Orders</h2>
 
   <% if (success && success.length > 0) { %>
-    <div class="bg-green-100 text-green-700 p-4 rounded mb-4">
+    <div class="bg-green-100 text-yellow-500 p-4 rounded mb-4">
       <%= success %>
     </div>
   <% } %>
 
   <% if (error && error.length > 0) { %>
-    <div class="bg-red-100 text-red-700 p-4 rounded mb-4">
+    <div class="bg-red-100 text-red-400 p-4 rounded mb-4">
       <%= error %>
     </div>
   <% } %>
@@ -20,7 +20,7 @@
   <% } else { %>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <% orders.forEach(order => { %>
-        <div class="bg-white rounded-xl shadow p-5 border">
+        <div class="bg-white rounded-xl shadow p-5 border border-gray-300">
           <div class="mb-2 text-sm text-gray-500">Order ID: <%= order._id %></div>
           <div class="mb-1"><strong>Status:</strong> 
             <span class="<%= order.status === 'Cancelled' ? 'text-red-600' : order.status === 'Delivered' ? 'text-green-600' : 'text-yellow-600' %>">

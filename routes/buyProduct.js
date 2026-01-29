@@ -4,8 +4,7 @@ const isLoggedIn = require("../middlewares/isLoggedIn");
 const userModel = require("../models/user-model");
 const orderModel = require("../models/order-model");
 
-const productModel=require("../models/product-model");
-
+const productModel = require("../models/product-model");
 
 router.get("/buynow/:productId", isLoggedIn, async (req, res) => {
   try {
@@ -16,21 +15,21 @@ router.get("/buynow/:productId", isLoggedIn, async (req, res) => {
     }
 
     const user = await userModel.findById(req.user._id);
-    const defaultAddress = user.addresses.find(addr => addr.isDefault) || user.addresses[0];
+    const defaultAddress =
+      user.addresses.find((addr) => addr.isDefault) || user.addresses[0];
 
     const arrivalDate = new Date();
     arrivalDate.setDate(arrivalDate.getDate() + 5);
 
     res.render("buynow-checkout", {
       product,
-      addresses: user.addresses,                         // all addresses
-      defaultAddressId: defaultAddress?._id?.toString(), // for dropdown selection
-      arrivalDate: arrivalDate.toDateString(),           // optional
+      addresses: user.addresses,
+      defaultAddressId: defaultAddress?._id?.toString(),
+      arrivalDate: arrivalDate.toDateString(),
       user,
       success: req.flash("success"),
-      error: req.flash("error")
+      error: req.flash("error"),
     });
-
   } catch (err) {
     console.error(err);
     req.flash("error", "Something went wrong");
@@ -38,15 +37,13 @@ router.get("/buynow/:productId", isLoggedIn, async (req, res) => {
   }
 });
 
-
-
 router.post("/buynow/confirm", isLoggedIn, async (req, res) => {
   try {
     const { productId, quantity, addressId, paymentMethod } = req.body;
     const product = await productModel.findById(productId);
     const user = await userModel.findById(req.user._id);
     const address = user.addresses.id(addressId); // from nested array
-
+    console.log(product);
     if (!product || !address) {
       req.flash("error", "Invalid product or address");
       return res.redirect("/shop");
@@ -80,12 +77,10 @@ router.post("/buynow/confirm", isLoggedIn, async (req, res) => {
   }
 });
 
-
-
 router.post("/buynow/place-order", isLoggedIn, async (req, res) => {
   try {
-    const { productId, quantity, addressId, paymentMethod } = req.body;
-
+    const { productId, addressId, paymentMethod } = req.body;
+    const quantity = parseInt(req.body.quantity, 10);
     const user = await userModel.findById(req.user._id);
     const product = await productModel.findById(productId);
     const selectedAddress = user.addresses.id(addressId);
@@ -94,26 +89,28 @@ router.post("/buynow/place-order", isLoggedIn, async (req, res) => {
       req.flash("error", "Invalid product or address");
       return res.redirect("/shop");
     }
-    const shippingFee = 49; 
+    const shippingFee = 49;
     const totalAmount = product.price * quantity + shippingFee; // consistent shipping fee
 
     const order = await orderModel.create({
       user: req.user._id,
-      products: [{ product: productId, quantity }],
+      products: [
+        { product: productId, quantity: quantity, price: product.price },
+      ],
       totalAmount,
-       platformFee: 0,        
-  shippingFee,  
+      platformFee: 0,
+      shippingFee,
       address: {
         fullname: user.fullname,
         address: selectedAddress.line1,
         city: selectedAddress.city,
         pincode: selectedAddress.pincode,
-        state: selectedAddress.state
+        state: selectedAddress.state,
       },
       paymentMethod,
     });
 
-      user.orders.push(order._id);
+    user.orders.push(order._id);
     await user.save();
 
     res.redirect(`/order-success/${order._id}`);
@@ -138,15 +135,13 @@ router.get("/order-success/:orderId", isLoggedIn, async (req, res) => {
       fromOrderId: true,
       user,
       order,
-      address: order.address, // ✅ fix added
-      deliveryDate
+      address: order.address,
+      deliveryDate,
     });
   } catch (err) {
     console.error(err);
     res.status(500).send("Order not found.");
   }
 });
-
-
 
 module.exports = router;
