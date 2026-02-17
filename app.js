@@ -19,7 +19,7 @@ const orderRouter = require("./routes/orderRouter");
 const myOrderRouter = require("./routes/myOrders");
 const adminOrderRouter = require("./routes/adminOrderRouter");
 const footerRouter = require("./routes/footerRouter");
-
+const adminRouter = require("./routes/adminRouter");
 mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => {
@@ -62,6 +62,7 @@ app.use("/", orderRouter);
 app.use("/", myOrderRouter);
 app.use("/", adminOrderRouter);
 app.use("/", footerRouter);
+app.use("/admin", adminRouter);
 
 app.listen(PORT, () => {
   console.log(`Server on listening on port ${PORT}`);

@@ -13,8 +13,6 @@ router.get("/terms", (req, res) => {
   res.render("terms-of-service");
 });
 
-router.get("/privacy", (req, res) => {
-  res.render("privacy-policy");
-});
+
 
 module.exports = router;

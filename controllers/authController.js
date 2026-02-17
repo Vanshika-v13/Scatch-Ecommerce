@@ -47,7 +47,11 @@ module.exports.loginUser = async (req, res) => {
   const user = await userModel.findOne({ email: email });
   if (!user) {
     req.flash("error", "email or password incorrect");
-    return res.redirect("/");
+    return res.redirect("/login");
+  }
+  if (user.isBlocked) {
+    req.flash("error", "Your account has been blocked by admin.");
+    return res.redirect("/login");
   }
   bcrypt.compare(password, user.password, async function (err, result) {
     if (result) {
@@ -63,7 +67,7 @@ module.exports.loginUser = async (req, res) => {
       }
     } else {
       req.flash("error", "email or password incorrect");
-      return res.redirect("/");
+      return res.redirect("/login");
     }
   });
 };

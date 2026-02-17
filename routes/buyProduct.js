@@ -94,9 +94,7 @@ router.post("/buynow/place-order", isLoggedIn, async (req, res) => {
 
     const order = await orderModel.create({
       user: req.user._id,
-      products: [
-        { product: productId, quantity: quantity, price: product.price },
-      ],
+      products: [{ product: productId, quantity:quantity, price: product.price }],
       totalAmount,
       platformFee: 0,
       shippingFee,

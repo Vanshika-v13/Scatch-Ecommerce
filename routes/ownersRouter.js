@@ -5,14 +5,15 @@ const router = express.Router();
 const ownerModel = require("../models/owner-model");
 const isOwner = require("../middlewares/isOwner");
 
-
 // Create owner (only in dev)
 if (process.env.NODE_ENV === "development") {
   router.post("/create", async (req, res) => {
     try {
       const owners = await ownerModel.find();
       if (owners.length > 0) {
-        return res.status(403).send("❌ You don't have permission to create a new owner.");
+        return res
+          .status(403)
+          .send("❌ You don't have permission to create a new owner.");
       }
 
       const { fullname, email, password } = req.body;
@@ -36,55 +37,64 @@ if (process.env.NODE_ENV === "development") {
   });
 }
 
-
-
-
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
   const owner = await ownerModel.findOne({ email });
   if (!owner) {
-    req.flash("error", "Owner not found.");
+    req.flash("error", "Email or password incorrect.");
     return res.redirect("/owners/login");
   }
 
   const isMatch = await bcrypt.compare(password, owner.password);
   if (!isMatch) {
-    req.flash("error", "Invalid password.");
+    req.flash("error", "Email or password incorrect.");
     return res.redirect("/owners/login");
   }
 
-  
   req.session.user = {
     _id: owner._id,
     email: owner.email,
-    role: "owner"
+    role: "owner",
+    is_admin: owner.is_admin || false,
   };
 
   req.flash("success", "Logged in successfully.");
   res.redirect("/owners/admin");
 });
 
+// Owner registration
+router.post("/register", async (req, res) => {
+  // Owner self-registration is disabled. Owner accounts must be
+  // created by an authorized owner (admin). Redirect with message.
+  req.flash(
+    "error",
+    "Owner accounts cannot be self-registered. Contact an existing store owner.",
+  );
+  return res.redirect("/owners/login");
+});
 
 // Owner login
 router.get("/login", (req, res) => {
   const error = req.flash("error");
   const success = req.flash("success");
-  res.render("owner-login", { error, success
-   
-   });
+  res.render("owner-login", { error, success });
 });
 
+// Owner registration
+router.get("/register", (req, res) => {
+  // Hide public owner registration page
+  req.flash(
+    "error",
+    "Owner registration is restricted. Please contact an authorized owner.",
+  );
+  return res.redirect("/owners/login");
+});
 
 // Admin panel (protected)
 router.get("/admin", isOwner, (req, res) => {
-  const success = req.flash("success");
-  const error = req.flash("error"); 
-
-  res.render("createProduct", { success, error }); 
+  res.redirect("/admin/dashboard");
 });
-
-
 
 // Logout
 router.get("/logout", (req, res) => {

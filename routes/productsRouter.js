@@ -1,8 +1,8 @@
-const express = require("express");
+const express=require("express");
 
-const router = express.Router();
-const upload = require("../config/multer-config");
-const productModel = require("../models/product-model");
+const router=express.Router();
+const upload=require("../config/multer-config");
+const productModel=require("../models/product-model");
 
 router.post("/create", upload.single("image"), async (req, res) => {
   try {
@@ -13,24 +13,17 @@ router.post("/create", upload.single("image"), async (req, res) => {
       return res.redirect("/owners/admin");
     }
 
-    const numericPrice = Number(price);
-    const numericDiscount = Number(discount) || 0;
-
-    if (isNaN(numericPrice)) {
-      req.flash("error", "Price must be a valid number.");
-      return res.redirect("/owners/admin");
-    }
-
     const product = await productModel.create({
-      image: `/images/uploads/${req.file.filename}`,
+      image: `/images/uploads/${req.file.filename}`, 
       name,
-      price: numericPrice,
-      discount: numericDiscount,
+      price,
+      discount,
       bgcolor,
       panelcolor,
       textcolor,
     });
 
+  
     req.flash("success", "Product created successfully");
     res.redirect("/owners/admin");
   } catch (err) {
@@ -40,4 +33,28 @@ router.post("/create", upload.single("image"), async (req, res) => {
   }
 });
 
-module.exports = router;
+
+
+
+
+router.post("/edit/:id", upload.single("image"), async (req, res) => {
+    try {
+        const { name, price, discount, bgcolor, panelcolor, textcolor } = req.body;
+        const updateData = { name, price, discount, bgcolor, panelcolor, textcolor };
+
+        if (req.file) {
+            updateData.image = `/images/uploads/${req.file.filename}`;
+        }
+
+        await productModel.findByIdAndUpdate(req.params.id, updateData);
+
+        req.flash("success", "Product updated successfully");
+        res.redirect("/admin/products");
+    } catch (err) {
+        console.error("Product update error:", err);
+        req.flash("error", "Failed to update product.");
+        res.redirect("/admin/products");
+    }
+});
+
+module.exports=router;

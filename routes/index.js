@@ -13,6 +13,13 @@ router.get("/", (req, res) => {
   res.render("index", { success, error, loggedin: false });
 });
 
+// Unified Login Page
+router.get("/login", (req, res) => {
+  const success = req.flash("success");
+  const error = req.flash("error");
+  res.render("login", { success, error });
+});
+
 router.get("/shop", isLoggedIn, async (req, res) => {
   const { filter, sort } = req.query;
   const success = req.flash("success");
