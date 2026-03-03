@@ -21,7 +21,7 @@ router.get("/register", (req, res) => {
 router.get("/login", (req, res) => {
   const success = req.flash("success");
   const error = req.flash("error");
-  res.redirect("/login");
+  res.redirect("/");
 });
 
 router.post("/register", registerUser);

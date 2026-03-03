@@ -38,6 +38,10 @@
     <div class="space-y-2">
       <h3 class="text-lg font-semibold">Product: <%= product.name %></h3>
       <p class="text-gray-700">Price: ₹<%= product.price %></p>
+      <% if (selectedSize) { %>
+        <p class="text-gray-700">Size: <strong><%= selectedSize %></strong></p>
+        <input type="hidden" name="size" value="<%= selectedSize %>">
+      <% } %>
 
       <div class="flex items-center gap-2">
         <label for="quantity" class="text-sm text-gray-700">Quantity:</label>
@@ -87,10 +91,10 @@
       <h3 class="text-lg font-semibold text-gray-800 mb-4">Select Payment Method</h3>
       <div class="space-y-2">
         <label class="flex items-center gap-2">
-          <input type="radio" name="paymentMethod" value="cod" required class="accent-yellow-500"> Cash on Delivery
+          <input type="radio" name="paymentMethod" value="COD" required class="accent-yellow-500"> Cash on Delivery
         </label>
         <label class="flex items-center gap-2">
-          <input type="radio" name="paymentMethod" value="upi" required class="accent-yellow-500"> UPI
+          <input type="radio" name="paymentMethod" value="UPI" required class="accent-yellow-500"> UPI
         </label>
       </div>
     </div>

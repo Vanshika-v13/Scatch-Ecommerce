@@ -6,7 +6,7 @@ const productModel=require("../models/product-model");
 
 router.post("/create", upload.single("image"), async (req, res) => {
   try {
-    const { name, price, discount, bgcolor, panelcolor, textcolor } = req.body;
+    const { name, price, discount, bgcolor, panelcolor, textcolor, gender, category } = req.body;
 
     if (!req.file) {
       req.flash("error", "Image is required.");
@@ -18,18 +18,20 @@ router.post("/create", upload.single("image"), async (req, res) => {
       name,
       price,
       discount,
-      bgcolor,
-      panelcolor,
-      textcolor,
+      bgcolor: bgcolor || '#f9fafb',
+      panelcolor: panelcolor || '#ffffff',
+      textcolor: textcolor || '#1f2937',
+      gender,
+      category,
     });
 
   
     req.flash("success", "Product created successfully");
-    res.redirect("/owners/admin");
+    res.redirect("/admin/products/create");
   } catch (err) {
     console.error("Product creation error:", err);
     req.flash("error", "Failed to create product.");
-    res.redirect("/owners/admin");
+    res.redirect("/admin/products/create");
   }
 });
 
@@ -39,8 +41,14 @@ router.post("/create", upload.single("image"), async (req, res) => {
 
 router.post("/edit/:id", upload.single("image"), async (req, res) => {
     try {
-        const { name, price, discount, bgcolor, panelcolor, textcolor } = req.body;
-        const updateData = { name, price, discount, bgcolor, panelcolor, textcolor };
+        const { name, price, discount, bgcolor, panelcolor, textcolor, gender, category } = req.body;
+        const updateData = {
+          name, price, discount,
+          bgcolor: bgcolor || '#f9fafb',
+          panelcolor: panelcolor || '#ffffff',
+          textcolor: textcolor || '#1f2937',
+          gender, category
+        };
 
         if (req.file) {
             updateData.image = `/images/uploads/${req.file.filename}`;

@@ -44,13 +44,21 @@
                                             <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-600">
                                                 <%= order._id %>
                                             </td>
-                                            <td class="px-4 py-2 text-sm text-gray-600">
+                                            <td class="px-4 py-3 text-sm text-gray-600">
                                                 <% order.products.forEach(function(item) { %>
-                                                    <div class="mb-1">
+                                                    <div class="flex items-center gap-3 mb-2">
                                                         <% if(item.product) { %>
-                                                            <%= item.product.name %> (x<%= item.quantity %>)
+                                                            <img src="<%= item.product.image %>" alt="<%= item.product.name %>" class="w-12 h-12 object-contain rounded border bg-gray-50 flex-shrink-0" />
+                                                            <div>
+                                                                <p class="font-medium text-gray-800"><%= item.product.name %></p>
+                                                                <p class="text-xs text-gray-500">Qty: <%= item.quantity %></p>
+                                                            </div>
                                                         <% } else { %>
-                                                            Product Removed (x<%= item.quantity %>)
+                                                            <div class="w-12 h-12 rounded border bg-gray-100 flex items-center justify-center text-xs text-gray-400 flex-shrink-0">N/A</div>
+                                                            <div>
+                                                                <p class="font-medium text-gray-400 italic">Product Deleted</p>
+                                                                <p class="text-xs text-gray-400">Qty: <%= item.quantity %></p>
+                                                            </div>
                                                         <% } %>
                                                     </div>
                                                 <% }); %>

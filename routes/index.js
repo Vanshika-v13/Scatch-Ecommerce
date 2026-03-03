@@ -5,34 +5,107 @@ const isLoggedIn = require("../middlewares/isLoggedIn");
 const productModel = require("../models/product-model");
 const userModel = require("../models/user-model");
 const orderModel = require("../models/order-model");
+const privilegeClubModel = require("../models/privilege-club-model");
 
-router.get("/", (req, res) => {
+const CLOTHING_CATEGORIES = [
+  "T-Shirt",
+  "Shirt",
+  "Jeans",
+  "Tops",
+  "Tees",
+  "Bottom",
+  "Dress",
+];
+const VALID_SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
+
+const normalizeSize = (size) =>
+  typeof size === "string" ? size.trim().toUpperCase() : "";
+
+const isClothingProduct = (product) =>
+  product && CLOTHING_CATEGORIES.includes(product.category);
+
+router.get("/", async (req, res) => {
   const success = req.flash("success");
-  const error = req.flash("error");
+  const loginError = req.flash("loginError");
+  const registerError = req.flash("registerError");
 
-  res.render("index", { success, error, loggedin: false });
+  const token = req.cookies.token;
+  let loggedIn = false;
+  if (token) {
+    try {
+      require("jsonwebtoken").verify(token, process.env.JWT_KEY || "shhhhh");
+      loggedIn = true;
+    } catch (err) {
+      loggedIn = false;
+    }
+  }
+
+  if (loggedIn) {
+    try {
+      const newArrivals = await productModel
+        .find()
+        .sort({ createdAt: -1 })
+        .limit(4);
+      const womenProducts = await productModel
+        .find({ gender: "Women" })
+        .sort({ salesCount: -1 })
+        .limit(6);
+      const menProducts = await productModel
+        .find({ gender: "Men" })
+        .sort({ salesCount: -1 })
+        .limit(9);
+      const trendingProducts = [...womenProducts, ...menProducts];
+      const featuredProducts = await productModel
+        .find({ discount: { $gt: 0 } })
+        .limit(4);
+
+      res.render("index", {
+        success,
+        loggedIn: true,
+        newArrivals,
+        trendingProducts,
+        womenProducts,
+        menProducts,
+        featuredProducts,
+      });
+    } catch (err) {
+      console.error("Error fetching home page data:", err);
+      res.render("index", {
+        success,
+        loggedIn: false,
+        loginError,
+        registerError,
+      });
+    }
+  } else {
+    res.render("index", {
+      success,
+      loggedIn: false,
+      loginError,
+      registerError,
+    });
+  }
 });
 
-// Unified Login Page
-router.get("/login", (req, res) => {
-  const success = req.flash("success");
-  const error = req.flash("error");
-  res.render("login", { success, error });
-});
+// Unified Login Page (Removed as requested)
 
 router.get("/shop", isLoggedIn, async (req, res) => {
-  const { filter, sort } = req.query;
+  const { filter, sort, gender, category } = req.query;
   const success = req.flash("success");
   const error = req.flash("error");
 
   let query = {};
 
-  // Apply filter
+  // Apply basic filters
   if (filter === "discounted") {
     query.discount = { $gt: 0 };
   } else if (filter === "available") {
     query.available = true;
   }
+
+  // Apply gender and category filters
+  if (gender) query.gender = gender;
+  if (category) query.category = category;
 
   let productsQuery = productModel.find(query);
 
@@ -52,7 +125,9 @@ router.get("/shop", isLoggedIn, async (req, res) => {
     success,
     error,
     filter,
-    sort, // Pass filter for highlighting
+    sort,
+    gender,
+    category,
   });
 });
 
@@ -88,6 +163,7 @@ router.get("/cart", isLoggedIn, async (req, res) => {
           price,
           discount,
           quantity,
+          size: item.size || null,
           totalMRP,
           discountAmount,
           netTotal,
@@ -108,10 +184,28 @@ router.get("/cart", isLoggedIn, async (req, res) => {
 router.get("/addtocart/:productid", isLoggedIn, async (req, res) => {
   try {
     const user = await userModel.findById(req.user._id);
+    const product = await productModel.findById(req.params.productid);
+
+    if (!product) {
+      req.flash("error", "Product not found.");
+      return res.redirect("/shop");
+    }
+
+    const requestedSize = normalizeSize(req.query.size);
+    const needsSize = isClothingProduct(product);
+
+    if (needsSize && !VALID_SIZES.includes(requestedSize)) {
+      req.flash("error", "Please select a valid size before adding to cart.");
+      return res.redirect("/shop");
+    }
+
+    const selectedSize = needsSize ? requestedSize : null;
 
     const existingItem = user.cart.find(
       (item) =>
-        item.product && item.product.toString() === req.params.productid,
+        item.product &&
+        item.product.toString() === req.params.productid &&
+        (item.size || null) === selectedSize,
     );
 
     if (existingItem) {
@@ -120,6 +214,7 @@ router.get("/addtocart/:productid", isLoggedIn, async (req, res) => {
       user.cart.push({
         product: req.params.productid,
         quantity: 1,
+        size: selectedSize,
       });
     }
 
@@ -137,9 +232,15 @@ router.get("/addtocart/:productid", isLoggedIn, async (req, res) => {
 router.post("/cart/increase/:productid", isLoggedIn, async (req, res) => {
   try {
     const user = await userModel.findById(req.user._id);
+    const requestedSize = normalizeSize(req.body.size || req.query.size);
+
     const item = user.cart.find(
-      (i) => i.product && i.product.toString() === req.params.productid,
+      (i) =>
+        i.product &&
+        i.product.toString() === req.params.productid &&
+        (requestedSize ? (i.size || "") === requestedSize : true),
     );
+
     if (item) item.quantity++;
     await user.save();
     res.sendStatus(200);
@@ -153,14 +254,24 @@ router.post("/cart/increase/:productid", isLoggedIn, async (req, res) => {
 router.post("/cart/decrease/:productid", isLoggedIn, async (req, res) => {
   try {
     const user = await userModel.findById(req.user._id);
+    const requestedSize = normalizeSize(req.body.size || req.query.size);
+
     const item = user.cart.find(
-      (i) => i.product && i.product.toString() === req.params.productid,
+      (i) =>
+        i.product &&
+        i.product.toString() === req.params.productid &&
+        (requestedSize ? (i.size || "") === requestedSize : true),
     );
+
     if (item && item.quantity > 1) {
       item.quantity--;
     } else {
       user.cart = user.cart.filter(
-        (i) => i.product.toString() !== req.params.productid,
+        (i) =>
+          !(
+            i.product.toString() === req.params.productid &&
+            (requestedSize ? (i.size || "") === requestedSize : true)
+          ),
       );
     }
     await user.save();
@@ -214,6 +325,8 @@ router.get("/checkout", isLoggedIn, async (req, res) => {
           ...item,
           product: item.product,
           quantity,
+          size: item.size || null,
+          discount,
           discountAmount,
           netTotal,
         };
@@ -277,6 +390,7 @@ router.post("/confirm-cart-order", isLoggedIn, async (req, res) => {
         name: product.name,
         image: product.image,
         quantity,
+        size: item.size || null,
         price,
         discount,
         discountAmount,
@@ -337,7 +451,8 @@ router.post("/place-cart-order", isLoggedIn, async (req, res) => {
         return {
           product: item.product._id,
           quantity: item.quantity,
-          price: finalPrice, // Store price in order
+          price: finalPrice,
+          size: item.size || null,
         };
       }),
       totalAmount,
@@ -369,6 +484,7 @@ router.post("/place-cart-order", isLoggedIn, async (req, res) => {
         image: item.product.image,
         name: item.product.name,
         quantity: item.quantity,
+        size: item.size || null,
       })),
       totalAmount,
     });
@@ -394,6 +510,95 @@ router.get("/myaccount", isLoggedIn, async (req, res) => {
   } catch (err) {
     req.flash("error", "Something went wrong.");
     res.redirect("/");
+  }
+});
+
+// Privilege Club Signup Route
+router.post("/join-privilege-club", async (req, res) => {
+  try {
+    const { fullname, email, phone } = req.body;
+
+    // Validate required fields
+    if (!fullname || !email || !phone) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide all required fields",
+      });
+    }
+
+    // Check if already a member
+    const existingMember = await privilegeClubModel.findOne({ email });
+    if (existingMember) {
+      return res.status(400).json({
+        success: false,
+        message: "This email is already registered in the Privilege Club",
+      });
+    }
+
+    // Create new privilege club member
+    const newMember = await privilegeClubModel.create({
+      fullname,
+      email,
+      phone,
+      status: "active",
+      benefits: {
+        exclusiveDiscount: 15,
+        freeShipping: true,
+        earlyAccess: true,
+        watchServicing: true,
+        watchCleanPolish: true,
+        extendedWarranty: 1,
+        lastServicingDate: null,
+      },
+    });
+
+    return res.status(201).json({
+      success: true,
+      message:
+        "Welcome to Scatch Privilege Club! Your membership is activated.",
+      member: newMember,
+    });
+  } catch (err) {
+    console.error("Privilege Club Signup Error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Error joining privilege club. Please try again.",
+    });
+  }
+});
+
+// Order Confirmation Page
+router.get("/order-confirmed/:orderId", isLoggedIn, async (req, res) => {
+  try {
+    const order = await orderModel
+      .findById(req.params.orderId)
+      .populate("products.product");
+
+    if (!order || order.user.toString() !== req.user._id.toString()) {
+      req.flash("error", "Order not found");
+      return res.redirect("/shop");
+    }
+
+    const arrivalDate = new Date();
+    arrivalDate.setDate(arrivalDate.getDate() + 5);
+
+    res.render("order-success", {
+      fromOrderId: true,
+      user: req.user,
+      address: order.address,
+      deliveryDate: arrivalDate,
+      products: order.products.map((item) => ({
+        image: item.product.image,
+        name: item.product.name,
+        quantity: item.quantity,
+        size: item.size || null,
+      })),
+      totalAmount: order.totalAmount,
+    });
+  } catch (err) {
+    console.error("Order Confirmation Error:", err);
+    req.flash("error", "Could not load order details");
+    res.redirect("/shop");
   }
 });
 

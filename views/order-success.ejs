@@ -65,6 +65,9 @@
               <p class="text-sm text-gray-600">
                 Quantity: <%= item.quantity %>
               </p>
+              <% if (item.size) { %>
+                <p class="text-sm text-gray-600">Size: <%= item.size %></p>
+              <% } %>
             </div>
           </div>
         <% }) %>
@@ -87,6 +90,9 @@
               <p class="text-sm text-gray-600">
                 Quantity: <%= item.quantity %>
               </p>
+              <% if (item.size) { %>
+                <p class="text-sm text-gray-600">Size: <%= item.size %></p>
+              <% } %>
             </div>
           </div>
         <% }) %>

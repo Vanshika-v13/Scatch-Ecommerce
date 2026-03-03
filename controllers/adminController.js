@@ -174,29 +174,38 @@ exports.deleteProduct = async (req, res) => {
 // ================= ORDERS =================
 
 exports.orders = async (req, res) => {
-  const rawOrders = await orderModel
-    .find()
-    .populate("user")
-    .populate("products.product");
+  try {
+    const rawOrders = await orderModel
+      .find()
+      .populate("user")
+      .populate("products.product");
 
-  const ordersByUser = {};
+    const ordersByUser = {};
 
-  rawOrders.forEach((order) => {
-    const userId = order.user._id;
-    if (!ordersByUser[userId]) {
-      ordersByUser[userId] = {
-        user: order.user,
-        orders: [],
-      };
-    }
-    ordersByUser[userId].orders.push(order);
-  });
+    rawOrders.forEach((order) => {
+      // Skip orders where the user account was deleted
+      if (!order.user) return;
 
-  res.render("admin/orders/index", {
-    ordersByUser: Object.values(ordersByUser),
-    success: req.flash("success"),
-    error: req.flash("error"),
-  });
+      const userId = order.user._id;
+      if (!ordersByUser[userId]) {
+        ordersByUser[userId] = {
+          user: order.user,
+          orders: [],
+        };
+      }
+      ordersByUser[userId].orders.push(order);
+    });
+
+    res.render("admin/orders/index", {
+      ordersByUser: Object.values(ordersByUser),
+      success: req.flash("success"),
+      error: req.flash("error"),
+    });
+  } catch (err) {
+    console.error("Admin orders error:", err);
+    req.flash("error", "Failed to load orders.");
+    res.redirect("/admin/dashboard");
+  }
 };
 
 exports.updateOrderStatus = async (req, res) => {

@@ -43,11 +43,27 @@
             <h4 class="font-semibold mb-2">Items:</h4>
             <% order.products.forEach(item => { %>
               <div class="flex items-center gap-4 mb-3">
-                <img src="<%= item.product.image %>" alt="watch" class="w-14 h-14 rounded border" />
-                <div>
-                  <p class="font-medium"><%= item.product.name %></p>
-                  <p class="text-sm text-gray-500">Quantity: <%= item.quantity %></p>
-                </div>
+                <% if (item.product) { %>
+                  <img src="<%= item.product.image %>" alt="<%= item.product.name %>" class="w-14 h-14 rounded border object-contain" />
+                  <div>
+                    <p class="font-medium"><%= item.product.name %></p>
+                    <p class="text-sm text-gray-500">Quantity: <%= item.quantity %></p>
+                    <% if (item.size) { %>
+                      <p class="text-sm text-gray-500">Size: <%= item.size %></p>
+                    <% } %>
+                  </div>
+                <% } else { %>
+                  <div class="w-14 h-14 rounded border bg-gray-100 flex items-center justify-center">
+                    <span class="text-gray-400 text-xs">N/A</span>
+                  </div>
+                  <div>
+                    <p class="font-medium text-gray-500 italic">Product no longer available</p>
+                    <p class="text-sm text-gray-500">Quantity: <%= item.quantity %></p>
+                    <% if (item.size) { %>
+                      <p class="text-sm text-gray-500">Size: <%= item.size %></p>
+                    <% } %>
+                  </div>
+                <% } %>
               </div>
             <% }) %>
           </div>

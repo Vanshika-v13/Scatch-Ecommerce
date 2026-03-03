@@ -8,6 +8,7 @@ const orderSchema = new mongoose.Schema(
         product: { type: mongoose.Schema.Types.ObjectId, ref: "product" },
         quantity: { type: Number, required: true },
         price: { type: Number, required: true },
+        size: { type: String, default: null },
         status: {
           type: String,
           enum: ["Active", "Cancelled"],
@@ -30,6 +31,12 @@ const orderSchema = new mongoose.Schema(
       default: "Placed",
     },
     paymentMethod: String, // "UPI" or "COD"
+    paymentId: String, // Payment reference ID
+    paymentStatus: {
+      type: String,
+      enum: ["Pending", "Completed", "Failed"],
+      default: "Pending",
+    },
 
     placedAt: { type: Date, default: Date.now },
   },

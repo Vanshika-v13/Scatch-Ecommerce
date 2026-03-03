@@ -24,88 +24,39 @@
 
 <body>
 
+  <% var loggedin = typeof loggedIn !== 'undefined' ? loggedIn : true %>
+
   <!-- Watchvana Navbar -->
   <nav class="w-full bg-white shadow-md sticky top-0 z-50 border-b border-gray-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-16 flex justify-between items-center h-16">
 
-      <!-- Brand Logo -->
-      <div class="text-3xl font-bold tracking-tight text-gray-900">
-        <a href="/" class="hover:opacity-90 transition duration-200">
-          <span class="text-yellow-500">Sca</span><span class="text-gray-900">tch</span>
-        </a>
+      <!-- Logo -->
+      <div class="flex items-center">
+        <div class="text-3xl font-bold tracking-tight text-gray-900">
+          <a href="/" class="hover:opacity-90 transition duration-200">
+            <span class="text-yellow-500">Sca</span><span class="text-gray-900">tch</span>
+          </a>
+        </div>
       </div>
 
       <!-- Desktop Links -->
-      <% var loggedin = typeof loggedin !== "undefined" ? loggedin : true %>
       <% if (loggedin) { %>
-      <div class="hidden md:flex items-center gap-6 text-sm font-medium ml-auto">
-
-        <!-- Shop link only if not on /shop -->
+      <div class="hidden md:flex items-center gap-8 text-sm font-medium">
         <% if (currentPath !== '/shop') { %>
         <a href="/shop" class="hover:text-yellow-500 transition">Shop</a>
         <% } %>
-
-        <a href="/cart" class="flex items-center text-gray-700 hover:text-yellow-500 transition">
+        <a href="/cart" class="flex items-center gap-1 text-gray-700 hover:text-yellow-500 transition">
           <i class="ri-shopping-cart-2-line text-xl"></i>
           <span>Cart</span>
         </a>
-
-        <a href="/myorders" class="hover:text-yellow-600">My Orders</a>
-        <a href="/account" class="text-gray-700 hover:text-yellow-500 transition">My Account</a>
-        <a href="/users/logout" class="text-red-600 hover:text-red-700 transition">Logout</a>
+        <a href="/myorders" class="hover:text-yellow-500 transition">Orders</a>
+        <a href="/account" class="hover:text-yellow-500 transition">Account</a>
+        <a href="/users/logout" class="text-red-600 hover:text-red-700 transition font-bold">Logout</a>
       </div>
       <% } %>
-
-   
-
-    <!-- Mobile Menu -->
-    <% if (loggedin) { %>
-        <div class="md:hidden flex items-center ml-auto">
-        <button id="mobile-menu-button" class="text-gray-700 hover:text-yellow-500 focus:outline-none">
-          <i class="ri-menu-line text-2xl"></i>
-        </button>
-      </div>
     </div>
-    <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-200 animate-slide-down">
-      <% if (currentPath !== '/shop') { %>
-      <a href="/shop" class="block px-4 py-3 text-gray-700 hover:bg-yellow-50 hover:text-yellow-500">Shop</a>
-      <% } %>
-      <a href="/cart" class="block px-4 py-3 text-gray-700 hover:bg-yellow-50 hover:text-yellow-500">Cart</a>
-      <a href="/myorders" class="block px-4 py-3 text-gray-700 hover:bg-yellow-50 hover:text-yellow-500">My Orders</a>
-      <a href="/account" class="block px-4 py-3 text-gray-700 hover:bg-yellow-50 hover:text-yellow-500">My Account</a>
-      <a href="/users/logout" class="block px-4 py-3 text-red-600 hover:bg-red-50 hover:text-red-700">Logout</a>
-    </div>
-    <% } %>
   </nav>
 
-  <script>
-    const menuButton = document.getElementById("mobile-menu-button");
-    const mobileMenu = document.getElementById("mobile-menu");
-
-    if (menuButton && mobileMenu) {
-      menuButton.addEventListener("click", () => {
-        mobileMenu.classList.toggle("hidden");
-      });
-    }
-  </script>
-
-  <style>
-    @keyframes slideDown {
-      0% {
-        opacity: 0;
-        transform: translateY(-10px);
-      }
-
-      100% {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .animate-slide-down {
-      animation: slideDown 0.3s ease-out;
-    }
-  </style>
 </body>
 
 </html>

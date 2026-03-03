@@ -9,13 +9,13 @@ module.exports.registerUser = async (req, res) => {
     const { fullname, email, password } = req.body;
 
     if (!fullname || !email || !password) {
-      req.flash("error", "All fields are required.");
+      req.flash("registerError", "All fields are required.");
       return res.redirect("/");
     }
 
     const existingUser = await userModel.findOne({ email });
     if (existingUser) {
-      req.flash("error", "You already have an account. Please login.");
+      req.flash("registerError", "You already have an account. Please login.");
       return res.redirect("/");
     }
 
@@ -31,13 +31,13 @@ module.exports.registerUser = async (req, res) => {
     const token = generateToken(newUser);
     res.cookie("token", token);
 
-    req.flash("success", "Account created successfully. Please login.");
+    req.flash("success", "Account created successfully.");
 
     return res.redirect("/");
     // res.redirect("/show-success");
   } catch (error) {
     console.error("Registration Error:", error);
-    req.flash("error", "Something went wrong during registration.");
+    req.flash("registerError", "Something went wrong during registration.");
     return res.redirect("/");
   }
 };
@@ -46,28 +46,21 @@ module.exports.loginUser = async (req, res) => {
   const { email, password } = req.body;
   const user = await userModel.findOne({ email: email });
   if (!user) {
-    req.flash("error", "email or password incorrect");
-    return res.redirect("/login");
+    req.flash("loginError", "email or password incorrect");
+    return res.redirect("/");
   }
   if (user.isBlocked) {
-    req.flash("error", "Your account has been blocked by admin.");
-    return res.redirect("/login");
+    req.flash("loginError", "Your account has been blocked by admin.");
+    return res.redirect("/");
   }
   bcrypt.compare(password, user.password, async function (err, result) {
     if (result) {
       const token = generateToken(user);
       res.cookie("token", token);
-      try {
-        const products = await Product.find();
-        const success = req.flash("success");
-        const error = req.flash("error");
-        res.redirect("/shop");
-      } catch (error) {
-        res.status(500).send("Error loading products: " + error.message);
-      }
+      return res.redirect("/");
     } else {
-      req.flash("error", "email or password incorrect");
-      return res.redirect("/login");
+      req.flash("loginError", "email or password incorrect");
+      return res.redirect("/");
     }
   });
 };

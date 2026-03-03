@@ -25,6 +25,9 @@
           <div class="flex-1">
             <p class="font-semibold"><%= item.name %></p>
             <p class="text-sm text-gray-700">Qty: <%= item.quantity %></p>
+            <% if (item.size) { %>
+              <p class="text-sm text-gray-700">Size: <%= item.size %></p>
+            <% } %>
             <p class="text-sm text-gray-600">Price After Discount: ₹<%= item.itemTotal.toFixed(2) %></p>
           </div>
         </li>
@@ -35,23 +38,42 @@
   <!-- Total Price (Only Final Total) -->
   <div class="bg-white p-4 rounded shadow mb-6">
     <h3 class="text-lg font-semibold mb-2">Total Amount</h3>
-    <p class="text-black  text-xl font-bold">₹<%= finalTotal.toFixed(2) %></p>
+    <p class="text-black text-xl font-bold">₹<%= finalTotal.toFixed(2) %></p>
   </div>
 
   <!-- Payment Method -->
-  <form action="/place-cart-order" method="POST" class="bg-white p-4 rounded shadow">
-    <input type="hidden" name="addressId" value="<%= address._id %>">
+  <div class="bg-white p-4 rounded shadow">
+    <h3 class="text-lg font-semibold mb-4">Choose Payment Method</h3>
 
-    <h3 class="text-lg font-semibold mb-2">Choose Payment Method</h3>
-    <select name="paymentMethod" required class="w-full border rounded p-2 mb-4">
-      <option value="COD">Cash on Delivery</option>
-      <option value="UPI">UPI</option>
-    </select>
+    <div class="space-y-3 mb-6">
+      <label class="flex items-center border p-3 rounded cursor-pointer hover:bg-gray-50">
+        <input type="radio" name="paymentMethod" value="COD" checked class="mr-3" id="paymentCOD">
+        <span class="font-medium text-gray-800">Cash on Delivery (COD)</span>
+      </label>
 
-    <button type="submit" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded">
-      Place your Order
+      <label class="flex items-center border p-3 rounded cursor-pointer hover:bg-gray-50">
+        <input type="radio" name="paymentMethod" value="UPI" class="mr-3" id="paymentUPI">
+        <span class="font-medium text-gray-800">UPI Payment</span>
+      </label>
+    </div>
+
+    <!-- COD Form -->
+    <form id="codForm" action="/place-cart-order" method="POST" class="block">
+      <input type="hidden" name="addressId" value="<%= address._id %>">
+      <input type="hidden" name="paymentMethod" value="COD">
+      <button type="submit" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded font-medium">
+        Place Order with COD
+      </button>
+    </form>
+
+    <!-- UPI Payment Button -->
+    <button id="upiPayBtn" style="display: none;" onclick="handleUPIPayment()" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded font-medium">
+      Pay with UPI
     </button>
-  </form>
+
+    <input type="hidden" id="addressId" value="<%= address._id %>">
+    <input type="hidden" id="totalAmount" value="<%= finalTotal %>">
+  </div>
 </div>
 
 <%- include('./partials/footer') %>

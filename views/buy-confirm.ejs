@@ -29,6 +29,9 @@
       <div class="flex-1">
         <h3 class="text-xl font-semibold"><%= product.name %></h3>
         <p>Quantity: <%= quantity %></p>
+        <% if (size) { %>
+          <p>Size: <%= size %></p>
+        <% } %>
         <p>Arriving By: <%= arrivalDate.toLocaleDateString() %></p>
       </div>
     </div>
@@ -36,6 +39,18 @@
     <!-- Bill Section -->
     <div class="bg-white p-4 rounded shadow-sm mb-6">
       <h3 class="text-lg font-semibold mb-2">Bill Details</h3>
+
+      <div class="flex justify-between mb-1">
+        <span>Base Price (<%=quantity%> × ₹<%= Math.round(price / quantity) %>):</span>
+        <span>₹<%= Math.round(price / quantity) * quantity %></span>
+      </div>
+
+      <% if(discount > 0) { %>
+      <div class="flex justify-between mb-1 text-green-600">
+        <span>Discount (<%= discount %>%):</span>
+        <span>-₹<%= discountAmount %></span>
+      </div>
+      <% } %>
 
       <div class="flex justify-between mb-1">
         <span>Item Total:</span>
@@ -54,58 +69,47 @@
     </div>
 
     <!-- Payment Method -->
-    <form action="/buynow/place-order" method="POST" class="bg-white p-4 rounded shadow-sm">
-      <input type="hidden" name="productId" value="<%= product._id %>" />
-      <input type="hidden" name="quantity" value="<%= quantity %>" />
-      <input type="hidden" name="addressId" value="<%= address._id %>" />
-      <input type="hidden" name="paymentMethod" value="<%= paymentMethod %>" />
+    <div class="bg-white p-4 rounded shadow">
+      <h3 class="text-lg font-semibold mb-4">Choose Payment Method</h3>
 
-      <!-- Payment Method -->
-      <div class="bg-white border rounded-lg p-5 shadow-sm mb-6">
-        <h3 class="text-lg font-semibold text-gray-800 mb-3">
-          Payment Method
-        </h3>
+      <div class="space-y-3 mb-6">
+        <label class="flex items-center border p-3 rounded cursor-pointer hover:bg-gray-50">
+          <input type="radio" name="paymentMethod" value="COD" checked class="mr-3" id="paymentCODBuy">
+          <span class="font-medium text-gray-800">Cash on Delivery (COD)</span>
+        </label>
 
-        <div class="flex items-center justify-between bg-gray-50 p-4 rounded-md gap-x-4 ">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 flex items-center justify-center rounded-full bg-yellow-100 text-yellow-600 text-lg">
-              <% if (paymentMethod === "cod") { %>₹<% } else { %>📱<% } %>
-            </div>
-
-            <div>
-              <p class="font-medium text-gray-900">
-                <% if (paymentMethod === "cod") { %>
-                Cash on Delivery
-                <% } else { %>
-                UPI Payment
-                <% } %>
-              </p>
-              <p class="text-sm text-gray-500">
-                <% if (paymentMethod === "cod") { %>
-                Pay in cash when your order is delivered
-                <% } else { %>
-                Secure payment using any UPI app
-                <% } %>
-              </p>
-            </div>
-           
-          </div>
-
-           <div>
-              <span class="text-green-600 font-semibold text-sm">
-                ✔ Selected
-              </span>
-            </div>
-
-        </div>
+        <label class="flex items-center border p-3 rounded cursor-pointer hover:bg-gray-50">
+          <input type="radio" name="paymentMethod" value="UPI" class="mr-3" id="paymentUPIBuy">
+          <span class="font-medium text-gray-800">UPI Payment</span>
+        </label>
       </div>
 
+      <!-- COD Form -->
+      <form id="codFormBuy" action="/buynow/place-order" method="POST" class="block">
+        <input type="hidden" name="productId" value="<%= product._id %>" />
+        <input type="hidden" name="quantity" value="<%= quantity %>" />
+        <% if (size) { %>
+          <input type="hidden" name="size" value="<%= size %>" />
+        <% } %>
+        <input type="hidden" name="addressId" value="<%= address._id %>" />
+        <input type="hidden" name="paymentMethod" value="COD">
+        <button type="submit" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded font-medium">
+          Place Order with COD
+        </button>
+      </form>
 
-
-      <button type="submit" class="bg-yellow-500 text-white px-6 py-2 rounded-lg text-lg font-medium hover:bg-yellow-600 transition">
-        Place Your Order
+      <!-- UPI Payment Button -->
+      <button id="upiPayBtnBuy" style="display: none;" onclick="handleBuyNowUPI()" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded font-medium">
+        Pay with UPI
       </button>
-    </form>
+
+      <input type="hidden" id="productIdBuy" value="<%= product._id %>">
+      <input type="hidden" id="quantityBuy" value="<%= quantity %>">
+      <input type="hidden" id="sizeBuy" value="<%= size || '' %>">
+      <input type="hidden" id="addressIdBuy" value="<%= address._id %>">
+      <input type="hidden" id="totalAmountBuy" value="<%= total %>">
+    </div>
+
   </div>
 </div>
 

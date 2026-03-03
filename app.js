@@ -6,6 +6,25 @@ const app = express();
 const PORT = process.env.PORT;
 const cookieParser = require("cookie-parser");
 const mongoose = require("mongoose");
+mongoose
+  .connect(process.env.MONGODB_URI)
+  .then(() => {
+    console.log("✅ MongoDB Connected");
+  })
+  .catch((err) => {
+    console.log("Connection error:", err);
+  });
+
+const db = mongoose.connection;
+
+db.on("error", (err) => {
+  console.log("Connection error:", err);
+});
+
+db.on("open", () => {
+  console.log("Database connection opened");
+});
+
 const path = require("path");
 const ownersRouter = require("./routes/ownersRouter");
 const usersRouter = require("./routes/usersRouter");
@@ -20,14 +39,6 @@ const myOrderRouter = require("./routes/myOrders");
 const adminOrderRouter = require("./routes/adminOrderRouter");
 const footerRouter = require("./routes/footerRouter");
 const adminRouter = require("./routes/adminRouter");
-mongoose
-  .connect(process.env.MONGODB_URI)
-  .then(() => {
-    console.log("connected to mongoDb");
-  })
-  .catch((err) => {
-    console.log(err);
-  });
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

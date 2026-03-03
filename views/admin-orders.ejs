@@ -55,11 +55,19 @@
               <h4 class="font-semibold mb-2">Items:</h4>
               <% order.products.forEach(item => { %>
                 <div class="flex items-center gap-4 mb-3">
-                  <img src="<%= item.product.image %>" alt="item" class="w-14 h-14 border rounded" />
+                  <% if (item.product) { %>
+                  <img src="<%= item.product.image %>" alt="item" class="w-14 h-14 border rounded object-cover" />
                   <div>
                     <p class="font-medium"><%= item.product.name %></p>
                     <p class="text-sm text-gray-500">Quantity: <%= item.quantity %></p>
                   </div>
+                  <% } else { %>
+                  <div class="w-14 h-14 border rounded bg-gray-100 flex items-center justify-center text-xs text-gray-400">N/A</div>
+                  <div>
+                    <p class="font-medium text-gray-400 italic">Product Deleted</p>
+                    <p class="text-sm text-gray-400">Quantity: <%= item.quantity %></p>
+                  </div>
+                  <% } %>
                 </div>
               <% }) %>
             </div>

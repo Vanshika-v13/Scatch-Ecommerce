@@ -46,8 +46,13 @@
       <div class="flex-1">
         <p class="font-semibold text-lg"><%= item.product.name %></p>
         <p class="text-sm text-gray-600">Qty: <%= item.quantity %></p>
-        <p class="text-sm">Price: ₹<%= item.product.price %></p>
-        <p class="text-sm text-green-700">Discount: ₹<%= item.discountAmount.toFixed(2) %></p>
+        <% if (item.size) { %>
+          <p class="text-sm text-gray-600">Size: <%= item.size %></p>
+        <% } %>
+        <p class="text-sm">Base Price: ₹<%= item.product.price %></p>
+        <% if(item.discount > 0) { %>
+          <p class="text-sm text-green-700">Discount (<%= item.discount %>%): -₹<%= item.discountAmount.toFixed(2) %></p>
+        <% } %>
         <p class="mt-1 font-semibold">Total for this item: ₹<%= item.netTotal.toFixed(2) %></p>
       </div>
     </div>
