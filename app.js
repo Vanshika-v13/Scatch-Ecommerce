@@ -3,17 +3,10 @@ const express = require("express");
 require("dotenv").config();
 
 const app = express();
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 3000;
 const cookieParser = require("cookie-parser");
 const mongoose = require("mongoose");
-mongoose
-  .connect(process.env.MONGODB_URI)
-  .then(() => {
-    console.log("✅ MongoDB Connected");
-  })
-  .catch((err) => {
-    console.log("Connection error:", err);
-  });
+mongoose.set("bufferCommands", false);
 
 const db = mongoose.connection;
 
@@ -75,6 +68,26 @@ app.use("/", adminOrderRouter);
 app.use("/", footerRouter);
 app.use("/admin", adminRouter);
 
-app.listen(PORT, () => {
-  console.log(`Server on listening on port ${PORT}`);
-});
+const startServer = async () => {
+  if (!process.env.MONGODB_URI) {
+    console.error("Missing required environment variable: MONGODB_URI");
+    process.exit(1);
+  }
+
+  try {
+    await mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 30000,
+      socketTimeoutMS: 45000,
+    });
+    console.log("✅ MongoDB Connected");
+
+    app.listen(PORT, () => {
+      console.log(`Server on listening on port ${PORT}`);
+    });
+  } catch (err) {
+    console.error("MongoDB connection failed:", err.message);
+    process.exit(1);
+  }
+};
+
+startServer();
