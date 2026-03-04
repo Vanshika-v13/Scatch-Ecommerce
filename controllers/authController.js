@@ -1,19 +1,18 @@
 const userModel = require("../models/user-model");
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
 const { generateToken } = require("../utils/generateToken");
-const Product = require("../models/product-model");
 
 module.exports.registerUser = async (req, res) => {
   try {
     const { fullname, email, password } = req.body;
+    const normalizedEmail = email?.trim().toLowerCase();
 
-    if (!fullname || !email || !password) {
+    if (!fullname || !normalizedEmail || !password) {
       req.flash("registerError", "All fields are required.");
       return res.redirect("/");
     }
 
-    const existingUser = await userModel.findOne({ email });
+    const existingUser = await userModel.findOne({ email: normalizedEmail });
     if (existingUser) {
       req.flash("registerError", "You already have an account. Please login.");
       return res.redirect("/");
@@ -24,7 +23,7 @@ module.exports.registerUser = async (req, res) => {
 
     const newUser = await userModel.create({
       fullname: fullname.trim(),
-      email: email.trim(),
+      email: normalizedEmail,
       password: hashedPassword,
     });
 
@@ -34,35 +33,57 @@ module.exports.registerUser = async (req, res) => {
     req.flash("success", "Account created successfully.");
 
     return res.redirect("/");
-    // res.redirect("/show-success");
   } catch (error) {
     console.error("Registration Error:", error);
-    req.flash("registerError", "Something went wrong during registration.");
+
+    if (error.code === 11000) {
+      req.flash("registerError", "Email already exists. Please login.");
+      return res.redirect("/");
+    }
+
+    if (error.message?.includes("JWT_KEY")) {
+      req.flash(
+        "registerError",
+        "Server configuration issue. Please contact support.",
+      );
+      return res.redirect("/");
+    }
+
+    req.flash("registerError", "Registration failed. Please try again.");
     return res.redirect("/");
   }
 };
 
 module.exports.loginUser = async (req, res) => {
-  const { email, password } = req.body;
-  const user = await userModel.findOne({ email: email });
-  if (!user) {
-    req.flash("loginError", "email or password incorrect");
-    return res.redirect("/");
-  }
-  if (user.isBlocked) {
-    req.flash("loginError", "Your account has been blocked by admin.");
-    return res.redirect("/");
-  }
-  bcrypt.compare(password, user.password, async function (err, result) {
-    if (result) {
-      const token = generateToken(user);
-      res.cookie("token", token);
-      return res.redirect("/");
-    } else {
+  try {
+    const { email, password } = req.body;
+    const normalizedEmail = email?.trim().toLowerCase();
+
+    const user = await userModel.findOne({ email: normalizedEmail });
+    if (!user) {
       req.flash("loginError", "email or password incorrect");
       return res.redirect("/");
     }
-  });
+
+    if (user.isBlocked) {
+      req.flash("loginError", "Your account has been blocked by admin.");
+      return res.redirect("/");
+    }
+
+    const result = await bcrypt.compare(password, user.password);
+    if (!result) {
+      req.flash("loginError", "email or password incorrect");
+      return res.redirect("/");
+    }
+
+    const token = generateToken(user);
+    res.cookie("token", token);
+    return res.redirect("/");
+  } catch (error) {
+    console.error("Login Error:", error);
+    req.flash("loginError", "Login failed. Please try again.");
+    return res.redirect("/");
+  }
 };
 
 module.exports.logoutUser = function (req, res) {

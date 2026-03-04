@@ -53,9 +53,61 @@
         <a href="/account" class="hover:text-yellow-500 transition">Account</a>
         <a href="/users/logout" class="text-red-600 hover:text-red-700 transition font-bold">Logout</a>
       </div>
+
+      <!-- Mobile Menu Button -->
+      <% if (loggedin) { %>
+      <button id="mobileMenuBtn" class="md:hidden p-2 rounded-lg hover:bg-gray-100 transition">
+        <i class="ri-menu-line text-2xl text-gray-900"></i>
+      </button>
+      <% } %>
       <% } %>
     </div>
+
+    <!-- Mobile Menu -->
+    <% if (loggedin) { %>
+    <div id="mobileMenu" class="hidden md:hidden bg-white border-t border-gray-200">
+      <div class="px-4 py-4 space-y-3">
+        <% if (currentPath !== '/shop') { %>
+        <a href="/shop" class="block px-4 py-2.5 text-gray-700 hover:bg-yellow-50 hover:text-yellow-600 rounded-lg transition font-medium">
+          <i class="ri-shopping-bag-line mr-2"></i>Shop
+        </a>
+        <% } %>
+        <a href="/cart" class="block px-4 py-2.5 text-gray-700 hover:bg-yellow-50 hover:text-yellow-600 rounded-lg transition font-medium">
+          <i class="ri-shopping-cart-2-line mr-2"></i>Cart
+        </a>
+        <a href="/myorders" class="block px-4 py-2.5 text-gray-700 hover:bg-yellow-50 hover:text-yellow-600 rounded-lg transition font-medium">
+          <i class="ri-file-list-line mr-2"></i>Orders
+        </a>
+        <a href="/account" class="block px-4 py-2.5 text-gray-700 hover:bg-yellow-50 hover:text-yellow-600 rounded-lg transition font-medium">
+          <i class="ri-user-line mr-2"></i>Account
+        </a>
+        <a href="/users/logout" class="block px-4 py-2.5 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg transition font-bold border-t border-gray-200 mt-2">
+          <i class="ri-logout-box-line mr-2"></i>Logout
+        </a>
+      </div>
+    </div>
+    <% } %>
   </nav>
+
+  <script>
+    // Mobile menu toggle
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+
+    if (mobileMenuBtn) {
+      mobileMenuBtn.addEventListener('click', function() {
+        mobileMenu.classList.toggle('hidden');
+      });
+
+      // Close menu when clicking a link
+      const mobileLinks = mobileMenu.querySelectorAll('a');
+      mobileLinks.forEach(link => {
+        link.addEventListener('click', function() {
+          mobileMenu.classList.add('hidden');
+        });
+      });
+    }
+  </script>
 
 </body>
 

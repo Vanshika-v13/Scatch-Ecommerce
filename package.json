@@ -26,6 +26,7 @@
     "mongoose": "^8.15.1",
     "multer": "^2.0.1",
     "nodemon": "^3.1.10",
+    "razorpay": "^2.9.6",
     "tailwindcss": "^4.1.18",
     "uuid": "^11.1.0"
   },

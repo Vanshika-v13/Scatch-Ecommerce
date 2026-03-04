@@ -19,6 +19,7 @@ const orderSchema = new mongoose.Schema(
     platformFee: { type: Number, default: 0 },
     shippingFee: { type: Number, default: 0 },
     totalAmount: Number,
+    paidAmount: { type: Number, default: 0 }, // Amount actually paid via Razorpay
     address: {
       fullname: String,
       address: String,
@@ -30,8 +31,8 @@ const orderSchema = new mongoose.Schema(
       enum: ["Placed", "Shipped", "Delivered", "Cancelled"],
       default: "Placed",
     },
-    paymentMethod: String, // "UPI" or "COD"
-    paymentId: String, // Payment reference ID
+    paymentMethod: String, // "Razorpay" or "COD"
+    paymentId: String, // Payment reference ID (Razorpay payment ID)
     paymentStatus: {
       type: String,
       enum: ["Pending", "Completed", "Failed"],

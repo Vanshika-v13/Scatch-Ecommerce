@@ -1,79 +1,288 @@
 <%- include('./partials/header') %>
 
-<div class="px-6 py-8 lg:px-20 font-sans relative">
-  <!-- Cancel button top-right -->
-  <a href="/shop" class="absolute top-6 right-6 text-red-600 underline font-medium hover:text-red-800">
-    Cancel
-  </a>
+<div class="bg-gray-50 min-h-screen">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
 
-<div class="max-w-4xl mx-auto p-6">
-  <h2 class="text-xl font-bold mb-6 text-gray-800">Confirm Your Order</h2>
-
-  <!-- Address -->
-  <div class="bg-gray-100 p-4 rounded shadow mb-6">
-    <p class="mb-2"><strong>Delivery Address:</strong> <%= address.line1 %>, <%= address.city %>, <%= address.state %> - <%= address.pincode %></p>
-    <p class="text-sm text-gray-600"><strong>Expected Delivery:</strong> <%= arrivalDate.toDateString() %></p>
-  </div>
-
-  <!-- Cart Items -->
-  <div class="bg-white p-4 rounded shadow-sm mb-6">
-    <h3 class="text-lg font-semibold mb-4">Items in Your Cart</h3>
-    <ul class="divide-y">
-      <% cartItems.forEach(item => { %>
-        <li class="flex gap-4 py-4">
-          <img src="<%= item.image %>" alt="<%= item.name %>" class="w-24 h-24 object-contain border rounded" />
-          <div class="flex-1">
-            <p class="font-semibold"><%= item.name %></p>
-            <p class="text-sm text-gray-700">Qty: <%= item.quantity %></p>
-            <% if (item.size) { %>
-              <p class="text-sm text-gray-700">Size: <%= item.size %></p>
-            <% } %>
-            <p class="text-sm text-gray-600">Price After Discount: ₹<%= item.itemTotal.toFixed(2) %></p>
-          </div>
-        </li>
-      <% }) %>
-    </ul>
-  </div>
-
-  <!-- Total Price (Only Final Total) -->
-  <div class="bg-white p-4 rounded shadow mb-6">
-    <h3 class="text-lg font-semibold mb-2">Total Amount</h3>
-    <p class="text-black text-xl font-bold">₹<%= finalTotal.toFixed(2) %></p>
-  </div>
-
-  <!-- Payment Method -->
-  <div class="bg-white p-4 rounded shadow">
-    <h3 class="text-lg font-semibold mb-4">Choose Payment Method</h3>
-
-    <div class="space-y-3 mb-6">
-      <label class="flex items-center border p-3 rounded cursor-pointer hover:bg-gray-50">
-        <input type="radio" name="paymentMethod" value="COD" checked class="mr-3" id="paymentCOD">
-        <span class="font-medium text-gray-800">Cash on Delivery (COD)</span>
-      </label>
-
-      <label class="flex items-center border p-3 rounded cursor-pointer hover:bg-gray-50">
-        <input type="radio" name="paymentMethod" value="UPI" class="mr-3" id="paymentUPI">
-        <span class="font-medium text-gray-800">UPI Payment</span>
-      </label>
+    <!-- Page Header -->
+    <div class="mb-6 flex justify-between items-center">
+      <div>
+        <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Review Your Order</h1>
+        <p class="text-sm text-gray-600 mt-1">Please review your order details before placing it</p>
+      </div>
+      <a href="/checkout" class="text-sm text-blue-600 hover:text-blue-700 font-medium">
+        ← Back to Checkout
+      </a>
     </div>
 
-    <!-- COD Form -->
-    <form id="codForm" action="/place-cart-order" method="POST" class="block">
-      <input type="hidden" name="addressId" value="<%= address._id %>">
-      <input type="hidden" name="paymentMethod" value="COD">
-      <button type="submit" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded font-medium">
-        Place Order with COD
-      </button>
-    </form>
+    <!-- Main Layout: Two Columns -->
+    <div class="lg:grid lg:grid-cols-12 lg:gap-6">
+      
+      <!-- Left Column: Address & Cart Items -->
+      <div class="lg:col-span-8 space-y-6 mb-6 lg:mb-0">
+        
+        <!-- Delivery Address Section -->
+        <div class="bg-white rounded-lg shadow-sm">
+          <div class="border-b border-gray-200 px-4 sm:px-6 py-4">
+            <h2 class="text-lg font-semibold text-gray-800">Delivery Address</h2>
+          </div>
+          
+          <div class="p-4 sm:p-6">
+            <div class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-gray-400 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+              <div>
+                <p class="text-sm sm:text-base text-gray-900 font-medium mb-1">
+                  <%= address.line1 %>, <%= address.city %>, <%= address.state %> - <%= address.pincode %>
+                </p>
+                <p class="text-sm text-green-600 flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                  </svg>
+                  Expected delivery by <%= arrivalDate.toLocaleDateString() %>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
 
-    <!-- UPI Payment Button -->
-    <button id="upiPayBtn" style="display: none;" onclick="handleUPIPayment()" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded font-medium">
-      Pay with UPI
-    </button>
+        <!-- Cart Items Section -->
+        <div class="bg-white rounded-lg shadow-sm">
+          <div class="border-b border-gray-200 px-4 sm:px-6 py-4">
+            <h2 class="text-lg font-semibold text-gray-800">Order Items (<%= cartItems.length %>)</h2>
+          </div>
 
-    <input type="hidden" id="addressId" value="<%= address._id %>">
-    <input type="hidden" id="totalAmount" value="<%= finalTotal %>">
+          <!-- Cart Items List -->
+          <div class="divide-y divide-gray-200">
+            <% cartItems.forEach(item => { %>
+              <div class="p-4 sm:p-6">
+                <div class="flex gap-4 sm:gap-6">
+                  
+                  <!-- Product Image -->
+                  <div class="shrink-0">
+                    <img src="<%= item.image %>" alt="<%= item.name %>" class="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-md border border-gray-200">
+                  </div>
+
+                  <!-- Product Details -->
+                  <div class="flex-1 min-w-0">
+                    <h3 class="text-base sm:text-lg font-medium text-gray-900 mb-2">
+                      <%= item.name %>
+                    </h3>
+                    
+                    <div class="space-y-1 mb-2">
+                      <p class="text-sm text-gray-600">Quantity: <span class="font-medium"><%= item.quantity %></span></p>
+                      <% if (item.size) { %>
+                        <p class="text-sm text-gray-600">Size: <span class="font-medium"><%= item.size %></span></p>
+                      <% } %>
+                    </div>
+
+                    <!-- Price Details -->
+                    <div class="flex items-center gap-2">
+                      <span class="text-base sm:text-lg font-semibold text-gray-900">₹<%= item.itemTotal.toFixed(2) %></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Column: Payment & Price Summary -->
+      <div class="lg:col-span-4">
+        <div class="bg-white rounded-lg shadow-sm sticky top-6">
+          <div class="p-4 sm:p-6">
+            
+            <!-- Price Details -->
+            <h2 class="text-lg font-semibold text-gray-800 mb-4 pb-4 border-b border-gray-200">
+              Price Details
+            </h2>
+
+            <div class="space-y-3 mb-4">
+              <div class="flex justify-between text-sm sm:text-base">
+                <span class="text-gray-700">Total Amount</span>
+                <span class="text-gray-900">₹<%= finalTotal.toFixed(2) %></span>
+              </div>
+            </div>
+
+            <div class="border-t border-gray-200 pt-4 mb-6">
+              <div class="flex justify-between items-center">
+                <span class="text-base sm:text-lg font-semibold text-gray-900">Amount Payable</span>
+                <span class="text-xl sm:text-2xl font-semibold text-gray-900">₹<%= finalTotal.toFixed(2) %></span>
+              </div>
+            </div>
+
+            <!-- Payment Method Selection -->
+            <div class="mb-6">
+              <h3 class="text-base font-semibold text-gray-800 mb-3">Payment Method</h3>
+              
+              <div class="space-y-2">
+                <label class="flex items-center gap-3 border border-gray-300 p-3 rounded-md cursor-pointer hover:bg-gray-50 transition">
+                  <input type="radio" name="paymentMethod" value="COD" checked class="accent-yellow-500 w-4 h-4" id="paymentCOD">
+                  <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                    <span class="text-sm font-medium text-gray-800">Cash on Delivery</span>
+                  </div>
+                </label>
+
+                <label class="flex items-center gap-3 border border-gray-300 p-3 rounded-md cursor-pointer hover:bg-gray-50 transition">
+                  <input type="radio" name="paymentMethod" value="Razorpay" class="accent-yellow-500 w-4 h-4" id="paymentRazorpay">
+                  <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                    </svg>
+                    <span class="text-sm font-medium text-gray-800">Online Payment</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Place Order Buttons -->
+            <!-- COD Form -->
+            <form id="codForm" action="/place-cart-order" method="POST" class="block">
+              <input type="hidden" name="addressId" value="<%= address._id %>">
+              <input type="hidden" name="paymentMethod" value="COD">
+              <button type="submit" id="codBtn" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded-md font-semibold text-base sm:text-lg">
+                Place Order
+              </button>
+            </form>
+
+            <!-- Razorpay Payment Button -->
+            <button id="razorpayBtn" style="display: none;" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded-md font-semibold text-base sm:text-lg">
+              Proceed to Pay
+            </button>
+
+            <input type="hidden" id="addressId" value="<%= address._id %>">
+            <input type="hidden" id="totalAmount" value="<%= finalTotal %>">
+
+            <!-- Safe & Secure Badge -->
+            <div class="mt-4 flex items-center justify-center gap-2 text-xs text-gray-500">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+              </svg>
+              <span>Safe and Secure Payment</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
   </div>
 </div>
 
 <%- include('./partials/footer') %>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+  const paymentMethodRadios = document.querySelectorAll('input[name="paymentMethod"]');
+  const codForm = document.getElementById('codForm');
+  const codBtn = document.getElementById('codBtn');
+  const razorpayBtn = document.getElementById('razorpayBtn');
+  const addressId = document.getElementById('addressId').value;
+  const totalAmount = parseFloat(document.getElementById('totalAmount').value);
+
+  paymentMethodRadios.forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      if (e.target.value === 'COD') {
+        codForm.style.display = 'block';
+        razorpayBtn.style.display = 'none';
+      } else if (e.target.value === 'Razorpay') {
+        codForm.style.display = 'none';
+        razorpayBtn.style.display = 'block';
+      }
+    });
+  });
+
+  razorpayBtn.addEventListener('click', async (e) => {
+    e.preventDefault();
+    
+    try {
+      // Create order on backend
+      const response = await fetch('/place-cart-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          addressId: addressId,
+          paymentMethod: 'Razorpay'
+        })
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        showAppAlert('Failed to create order: ' + data.message);
+        return;
+      }
+
+      const orderId = data.orderId;
+      const options = {
+        key: data.keyId,
+        amount: data.amount * 100, // Convert to paise
+        currency: data.currency,
+        name: 'Scatch Store',
+        description: 'Order Payment',
+        order_id: data.razorpayOrderId,
+        prefill: {
+          name: data.userName,
+          email: data.userEmail,
+          contact: data.userPhone
+        },
+        theme: {
+          color: '#3399cc'
+        },
+        handler: function(response) {
+          // Verify payment on backend
+          verifyPayment(orderId, data.razorpayOrderId, response.razorpay_payment_id, response.razorpay_signature);
+        },
+        modal: {
+          ondismiss: function() {
+            console.log('Payment modal closed');
+          }
+        }
+      };
+
+      const rzp = new Razorpay(options);
+      rzp.open();
+    } catch (error) {
+      console.error('Error:', error);
+      showAppAlert('An error occurred while processing payment');
+    }
+  });
+
+  async function verifyPayment(orderId, razorpayOrderId, paymentId, signature) {
+    try {
+      const response = await fetch('/verify-razorpay-payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderId: orderId,
+          razorpayOrderId: razorpayOrderId,
+          razorpayPaymentId: paymentId,
+          razorpaySignature: signature
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        showAppAlert('Payment successful!');
+        window.location.href = `/order-confirmed/${orderId}`;
+      } else {
+        showAppAlert('Payment verification failed: ' + data.message);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      showAppAlert('Payment verification error');
+    }
+  }
+</script>
+

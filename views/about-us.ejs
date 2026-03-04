@@ -1,37 +1,118 @@
 <%- include('./partials/header') %>
 
-<!-- About Us Section -->
-<div class="max-w-7xl mx-auto px-6 py-10 text-gray-800">
-  <h2 class="text-xl font-bold mb-6">About Us</h2>
+<div class="bg-gray-50 min-h-screen">
+  <div
+    class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 text-gray-800"
+  >
+    <div class="mb-6 sm:mb-8">
+      <h1 class="text-xl sm:text-2xl font-bold text-gray-900">About Scatch</h1>
+      <p class="text-sm text-gray-600 mt-1">
+        Building a trusted shopping experience inspired by global ecommerce
+        standards.
+      </p>
+    </div>
 
-  <div class="space-y-6">
-    <p class="text-[18px]">
-      At <span class="text-yellow-500">Scatch</span>, we are dedicated to
-      offering premium men's and women's clothing alongside luxurious,
-      high-quality timepieces that blend timeless design with modern
-      craftsmanship. Our curated collections are crafted to fit every style,
-      occasion, and budget, offering both sophistication and functionality. We
-      strive to deliver products that reflect our values of quality,
-      reliability, and elegance.
-    </p>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <section
+        class="lg:col-span-2 bg-white rounded-lg shadow-sm border border-gray-200"
+      >
+        <div class="border-b border-gray-200 px-4 sm:px-6 py-4">
+          <h2 class="text-base sm:text-lg font-semibold text-gray-900">
+            Who We Are
+          </h2>
+        </div>
+        <div
+          class="p-4 sm:p-6 space-y-5 text-sm sm:text-base text-gray-700 leading-relaxed"
+        >
+          <p>
+            At <span class="text-yellow-500 font-semibold">Scatch</span>, we
+            curate premium men's and women's clothing along with elegant,
+            high-quality watches designed for modern lifestyles. Our collections
+            are selected to balance style, comfort, and value.
+          </p>
+          <p>
+            We focus on dependable quality, transparent pricing, and service
+            that feels smooth from product discovery to post-order support.
+          </p>
+        </div>
+      </section>
 
-    <h3 class="text-xl font-semibold mt-6">Our Mission</h3>
-    <p class="text-lg">
-      Our mission is to provide customers with premium men's and women's fashion
-      alongside the finest watches that embody both luxury and style. We aim to
-      build a brand that is synonymous with quality, elegance, and customer
-      satisfaction. Every piece in our collection is carefully selected to
-      ensure it meets the highest standards of design and craftsmanship.
-    </p>
+      <aside class="space-y-6">
+        <section class="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div class="border-b border-gray-200 px-4 py-4">
+            <h2 class="text-base font-semibold text-gray-900">Our Promise</h2>
+          </div>
+          <ul class="p-4 space-y-3 text-sm text-gray-700">
+            <li class="border border-gray-200 rounded-lg px-3 py-2">
+              Curated quality-first catalog
+            </li>
+            <li class="border border-gray-200 rounded-lg px-3 py-2">
+              Secure checkout experience
+            </li>
+            <li class="border border-gray-200 rounded-lg px-3 py-2">
+              Responsive support team
+            </li>
+            <li class="border border-gray-200 rounded-lg px-3 py-2">
+              Customer-first policies
+            </li>
+          </ul>
+        </section>
+      </aside>
+    </div>
 
-    <h3 class="text-xl font-semibold mt-6">Why Choose Us</h3>
-    <ul class="space-y-3">
-      <li class="text-lg">� Premium Men's & Women's Fashion Collections</li>
-      <li class="text-lg">�🕒 Timeless designs from top brands</li>
-      <li class="text-lg">🔒 100% secure checkout and payment options</li>
-      <li class="text-lg">💬 Friendly and responsive customer support</li>
-      <li class="text-lg">💎 Affordable luxury for every taste</li>
-    </ul>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+      <section class="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div class="border-b border-gray-200 px-4 sm:px-6 py-4">
+          <h2 class="text-base sm:text-lg font-semibold text-gray-900">
+            Our Mission
+          </h2>
+        </div>
+        <div
+          class="p-4 sm:p-6 text-sm sm:text-base text-gray-700 leading-relaxed"
+        >
+          To make premium fashion and timepieces more accessible through a
+          trusted digital shopping experience with consistent product quality,
+          safe payments, and fast customer support.
+        </div>
+      </section>
+
+      <section class="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div class="border-b border-gray-200 px-4 sm:px-6 py-4">
+          <h2 class="text-base sm:text-lg font-semibold text-gray-900">
+            Why Customers Choose Us
+          </h2>
+        </div>
+        <ul
+          class="p-4 sm:p-6 space-y-2 text-sm sm:text-base text-gray-700 list-disc pl-5"
+        >
+          <li>Wide selection across men, women, and accessories</li>
+          <li>Reliable order processing and delivery updates</li>
+          <li>Clear returns and support channels</li>
+          <li>Designs that blend timeless and modern trends</li>
+        </ul>
+      </section>
+    </div>
+
+    <section class="bg-white rounded-lg shadow-sm border border-gray-200 mt-6">
+      <div
+        class="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+      >
+        <div>
+          <h2 class="text-base sm:text-lg font-semibold text-gray-900">
+            Have questions about Scatch?
+          </h2>
+          <p class="text-sm text-gray-600 mt-1">
+            Our team is ready to help with products, orders, and policy queries.
+          </p>
+        </div>
+        <a
+          href="/contact"
+          class="inline-flex items-center justify-center bg-yellow-500 hover:bg-yellow-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition"
+        >
+          Contact Us
+        </a>
+      </div>
+    </section>
   </div>
 </div>
 

@@ -48,7 +48,15 @@ exports.dashboard = async (req, res) => {
   const paymentMethods = {
     UPI: orders.filter((o) => o.paymentMethod === "UPI").length,
     COD: orders.filter((o) => o.paymentMethod === "COD").length,
+    Razorpay: orders.filter((o) => o.paymentMethod === "Razorpay").length,
   };
+
+  // Total paid amount via Razorpay
+  const razorpayRevenue = orders
+    .filter(
+      (o) => o.paymentMethod === "Razorpay" && o.paymentStatus === "Completed",
+    )
+    .reduce((sum, order) => sum + (order.paidAmount || 0), 0);
 
   // Top 5 products
   const productSales = {};
@@ -97,6 +105,7 @@ exports.dashboard = async (req, res) => {
     totalUsers,
     totalOrders,
     totalRevenue,
+    razorpayRevenue,
     avgOrderValue,
     conversionRate,
     revenueTrendData: JSON.stringify(revenueTrendData),
@@ -107,7 +116,11 @@ exports.dashboard = async (req, res) => {
       ordersByStatus.Delivered,
       ordersByStatus.Cancelled,
     ]),
-    paymentMethods: JSON.stringify([paymentMethods.UPI, paymentMethods.COD]),
+    paymentMethods: JSON.stringify([
+      paymentMethods.UPI,
+      paymentMethods.COD,
+      paymentMethods.Razorpay,
+    ]),
     topProducts: JSON.stringify(
       topProducts.map((p) => ({
         name: p.name.substring(0, 15),

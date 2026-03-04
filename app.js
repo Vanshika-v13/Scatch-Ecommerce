@@ -8,6 +8,22 @@ const cookieParser = require("cookie-parser");
 const mongoose = require("mongoose");
 mongoose.set("bufferCommands", false);
 
+const requiredEnvVars = [
+  "MONGODB_URI",
+  "JWT_KEY",
+  "EXPRESS_SESSION_SECRET",
+  "RAZORPAY_KEY_ID",
+  "RAZORPAY_KEY_SECRET",
+];
+const missingEnvVars = requiredEnvVars.filter((key) => !process.env[key]);
+
+if (missingEnvVars.length > 0) {
+  console.error(
+    `Missing required environment variable(s): ${missingEnvVars.join(", ")}`,
+  );
+  process.exit(1);
+}
+
 const db = mongoose.connection;
 
 db.on("error", (err) => {
@@ -69,11 +85,6 @@ app.use("/", footerRouter);
 app.use("/admin", adminRouter);
 
 const startServer = async () => {
-  if (!process.env.MONGODB_URI) {
-    console.error("Missing required environment variable: MONGODB_URI");
-    process.exit(1);
-  }
-
   try {
     await mongoose.connect(process.env.MONGODB_URI, {
       serverSelectionTimeoutMS: 30000,

@@ -466,7 +466,26 @@ router.post("/place-cart-order", isLoggedIn, async (req, res) => {
         state: address.state,
       },
       paymentMethod,
+      paymentStatus: paymentMethod === "COD" ? "Completed" : "Pending",
     });
+
+    // For Razorpay, create a Razorpay order
+    if (paymentMethod === "Razorpay") {
+      const { createRazorpayOrder } = require("../utils/razorpay");
+      const razorpayOrder = await createRazorpayOrder(totalAmount, order._id);
+
+      return res.json({
+        success: true,
+        orderId: order._id,
+        razorpayOrderId: razorpayOrder.id,
+        amount: totalAmount,
+        currency: "INR",
+        keyId: process.env.RAZORPAY_KEY_ID,
+        userEmail: user.email,
+        userName: user.fullname,
+        userPhone: user.phone || "",
+      });
+    }
 
     user.orders.push(order._id);
     user.cart = []; // Clear cart after order
@@ -599,6 +618,136 @@ router.get("/order-confirmed/:orderId", isLoggedIn, async (req, res) => {
     console.error("Order Confirmation Error:", err);
     req.flash("error", "Could not load order details");
     res.redirect("/shop");
+  }
+});
+
+// Get Razorpay order details
+router.get("/razorpay-order/:orderId", isLoggedIn, async (req, res) => {
+  try {
+    const order = await orderModel.findById(req.params.orderId);
+
+    if (!order || order.user.toString() !== req.user._id.toString()) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    if (order.paymentStatus !== "Pending") {
+      return res
+        .status(400)
+        .json({ error: "Invalid order status for payment" });
+    }
+
+    const { createRazorpayOrder } = require("../utils/razorpay");
+    const razorpayOrder = await createRazorpayOrder(
+      order.totalAmount,
+      order._id,
+    );
+
+    const user = await userModel.findById(order.user);
+
+    res.json({
+      success: true,
+      orderId: order._id,
+      razorpayOrderId: razorpayOrder.id,
+      amount: order.totalAmount,
+      currency: "INR",
+      keyId: process.env.RAZORPAY_KEY_ID,
+      userEmail: user.email,
+      userName: user.fullname,
+      userPhone: user.phone || "",
+    });
+  } catch (err) {
+    console.error("Error fetching Razorpay order:", err);
+    res.status(500).json({ error: "Failed to create payment order" });
+  }
+});
+
+// Verify Razorpay payment
+router.post("/verify-razorpay-payment", isLoggedIn, async (req, res) => {
+  try {
+    const { orderId, razorpayOrderId, razorpayPaymentId, razorpaySignature } =
+      req.body;
+
+    // Validate input
+    if (
+      !orderId ||
+      !razorpayOrderId ||
+      !razorpayPaymentId ||
+      !razorpaySignature
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "❌ Missing required payment verification fields",
+      });
+    }
+
+    const { verifyRazorpaySignature } = require("../utils/razorpay");
+
+    // Verify signature
+    const isSignatureValid = verifyRazorpaySignature(
+      razorpayOrderId,
+      razorpayPaymentId,
+      razorpaySignature,
+    );
+
+    if (!isSignatureValid) {
+      console.error("❌ Invalid payment signature for order:", orderId);
+      return res.status(400).json({
+        success: false,
+        message: "❌ Invalid payment signature. Payment verification failed.",
+      });
+    }
+
+    // Get current order to validate it exists and belongs to user
+    const currentOrder = await orderModel.findById(orderId);
+    if (!currentOrder) {
+      console.error("❌ Order not found:", orderId);
+      return res.status(404).json({
+        success: false,
+        message: "❌ Order not found",
+      });
+    }
+
+    // Verify order belongs to the logged-in user
+    if (currentOrder.user.toString() !== req.user._id.toString()) {
+      console.error("❌ Unauthorized order access attempt:", orderId);
+      return res.status(403).json({
+        success: false,
+        message: "❌ Unauthorized access to this order",
+      });
+    }
+
+    // Update order status with payment details
+    const order = await orderModel.findByIdAndUpdate(
+      orderId,
+      {
+        paymentStatus: "Completed",
+        paymentId: razorpayPaymentId,
+        paidAmount: currentOrder.totalAmount, // Record the amount paid
+      },
+      { new: true },
+    );
+
+    // Add order to user's orders if not already added
+    const user = await userModel.findById(req.user._id);
+    if (!user.orders.includes(orderId)) {
+      user.orders.push(orderId);
+      user.cart = []; // Clear cart
+      await user.save();
+    }
+
+    console.log(`✅ Payment verified successfully for order: ${orderId}`);
+
+    res.json({
+      success: true,
+      message: "✅ Payment verified successfully",
+      orderId: order._id,
+    });
+  } catch (err) {
+    console.error("❌ Payment verification error:", err);
+    res.status(500).json({
+      success: false,
+      message: "❌ Payment verification failed. Please contact support.",
+    });
   }
 });
 

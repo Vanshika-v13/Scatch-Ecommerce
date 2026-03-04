@@ -62,6 +62,11 @@ router.get("/buynow/:productId", isLoggedIn, async (req, res) => {
   }
 });
 
+// ============================================================================
+// NOTE: This route is no longer needed as payment selection is now handled
+// directly on the /buynow/:productId page. Kept for reference.
+// ============================================================================
+/*
 router.post("/buynow/confirm", isLoggedIn, async (req, res) => {
   try {
     const { productId, quantity, addressId, paymentMethod } = req.body;
@@ -113,26 +118,73 @@ router.post("/buynow/confirm", isLoggedIn, async (req, res) => {
     res.redirect("/shop");
   }
 });
+*/
 
 router.post("/buynow/place-order", isLoggedIn, async (req, res) => {
   try {
+    // Validate inputs
     const { productId, addressId, paymentMethod } = req.body;
+
+    if (!productId || !addressId || !paymentMethod) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "❌ Missing required fields (productId, addressId, paymentMethod)",
+      });
+    }
+
+    if (!["COD", "Razorpay"].includes(paymentMethod)) {
+      return res.status(400).json({
+        success: false,
+        message: "❌ Invalid payment method",
+      });
+    }
+
+    // Parse and validate quantity
     const quantity = parseInt(req.body.quantity, 10);
+    if (isNaN(quantity) || quantity < 1) {
+      return res.status(400).json({
+        success: false,
+        message: "❌ Quantity must be a positive number",
+      });
+    }
+
+    // Fetch user and product with error handling
     const user = await userModel.findById(req.user._id);
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "❌ User not found",
+      });
+    }
+
     const product = await productModel.findById(productId);
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "❌ Product not found",
+      });
+    }
+
+    // Validate selected address
     const selectedAddress = user.addresses.id(addressId);
+    if (!selectedAddress) {
+      return res.status(400).json({
+        success: false,
+        message: "❌ Please select a valid delivery address",
+      });
+    }
+
+    // Validate size for clothing products
     const selectedSize = normalizeSize(req.body.size);
-
-    if (!product || !selectedAddress) {
-      req.flash("error", "Invalid product or address");
-      return res.redirect("/shop");
-    }
-
     if (isClothingProduct(product) && !VALID_SIZES.includes(selectedSize)) {
-      req.flash("error", "Please select a valid size before placing order.");
-      return res.redirect("/shop");
+      return res.status(400).json({
+        success: false,
+        message: "❌ Please select a valid size before placing order.",
+      });
     }
 
+    // Calculate order total
     const discount = Number(product.discount || 0);
     const baseTotalPrice = product.price * quantity;
     const discountAmount = +(baseTotalPrice * (discount / 100)).toFixed(2);
@@ -140,6 +192,7 @@ router.post("/buynow/place-order", isLoggedIn, async (req, res) => {
     const shippingFee = 49;
     const totalAmount = +(priceAfterDiscount + shippingFee).toFixed(2);
 
+    // Create order in database
     const order = await orderModel.create({
       user: req.user._id,
       products: [
@@ -150,9 +203,9 @@ router.post("/buynow/place-order", isLoggedIn, async (req, res) => {
           size: isClothingProduct(product) ? selectedSize : null,
         },
       ],
-      totalAmount,
+      totalAmount: totalAmount,
       platformFee: 0,
-      shippingFee,
+      shippingFee: shippingFee,
       address: {
         fullname: user.fullname,
         address: selectedAddress.line1,
@@ -160,29 +213,101 @@ router.post("/buynow/place-order", isLoggedIn, async (req, res) => {
         pincode: selectedAddress.pincode,
         state: selectedAddress.state,
       },
-      paymentMethod,
+      paymentMethod: paymentMethod,
+      paymentStatus: paymentMethod === "COD" ? "Completed" : "Pending",
     });
 
+    console.log(`✅ Order created: ${order._id}`);
+
+    // Handle Razorpay payment
+    if (paymentMethod === "Razorpay") {
+      try {
+        const { createRazorpayOrder } = require("../utils/razorpay");
+        const razorpayOrder = await createRazorpayOrder(totalAmount, order._id);
+
+        console.log(
+          `✅ Razorpay order created: ${razorpayOrder.id} for order ${order._id}`,
+        );
+
+        return res.json({
+          success: true,
+          orderId: order._id.toString(),
+          razorpayOrderId: razorpayOrder.id,
+          amount: totalAmount,
+          currency: "INR",
+          keyId: process.env.RAZORPAY_KEY_ID,
+          userEmail: user.email,
+          userName: user.fullname,
+          userPhone: user.phone || "",
+        });
+      } catch (razorpayError) {
+        console.error("❌ Razorpay error:", razorpayError);
+        return res.status(500).json({
+          success: false,
+          message: "❌ Failed to initiate Razorpay payment. Please try again.",
+        });
+      }
+    }
+
+    // Handle COD payment - add order to user and clear cart
     user.orders.push(order._id);
+    user.cart = []; // Clear the cart after order is placed
     await user.save();
 
-    res.redirect(`/order-success/${order._id}`);
+    console.log(`✅ COD Order confirmed for user ${req.user._id}`);
+
+    // Return JSON response for COD (frontend will redirect)
+    return res.json({
+      success: true,
+      orderId: order._id.toString(),
+      paymentMethod: "COD",
+      message: "✅ Order placed successfully!",
+    });
   } catch (err) {
-    console.error("Place Order Error:", err);
-    req.flash("error", "Something went wrong while placing order.");
-    res.redirect("/shop");
+    console.error("❌ Place Order Error:", err);
+    res.status(500).json({
+      success: false,
+      message: "❌ Something went wrong while placing order. Please try again.",
+    });
   }
 });
 
 router.get("/order-success/:orderId", isLoggedIn, async (req, res) => {
   try {
-    const order = await orderModel
-      .findById(req.params.orderId)
-      .populate("products.product");
-    const user = await userModel.findById(order.user);
+    const { orderId } = req.params;
 
+    // Validate orderId format
+    if (!orderId || orderId.length < 1) {
+      console.error("❌ Invalid order ID format");
+      return res.status(400).send("Invalid order ID.");
+    }
+
+    const order = await orderModel
+      .findById(orderId)
+      .populate("products.product");
+
+    if (!order) {
+      console.error("❌ Order not found:", orderId);
+      return res.status(404).send("Order not found.");
+    }
+
+    // Verify order belongs to the logged-in user
+    if (order.user.toString() !== req.user._id.toString()) {
+      console.error("❌ Unauthorized order access:", orderId);
+      return res.status(403).send("Unauthorized access to this order.");
+    }
+
+    const user = await userModel.findById(order.user);
+    if (!user) {
+      console.error("❌ User not found for order:", orderId);
+      return res.status(404).send("User not found.");
+    }
+
+    // Calculate delivery date (5 days from now)
     const deliveryDate = new Date();
     deliveryDate.setDate(deliveryDate.getDate() + 5);
+
+    console.log(`✅ Order success page accessed for order: ${orderId}`);
 
     res.render("order-success", {
       fromOrderId: true,
@@ -190,10 +315,12 @@ router.get("/order-success/:orderId", isLoggedIn, async (req, res) => {
       order,
       address: order.address,
       deliveryDate,
+      paymentMethod: order.paymentMethod,
+      paymentStatus: order.paymentStatus,
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).send("Order not found.");
+    console.error("❌ Order success route error:", err);
+    res.status(500).send("An error occurred while retrieving your order.");
   }
 });
 
